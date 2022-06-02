@@ -6,6 +6,9 @@
 !_TAG_PROGRAM_URL	https://ctags.io/	/official site/
 !_TAG_PROGRAM_VERSION	0.0.0	//
 $(VERBOSE).SILENT	build/Makefile	/^$(VERBOSE).SILENT:$/;"	t
+0	build/compile_commands.json	/^{$/;"	o
+1	build/compile_commands.json	/^{$/;"	o
+2	build/compile_commands.json	/^{$/;"	o
 ARCHITECTURE_ID	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^#   define ARCHITECTURE_ID /;"	d	file:
 ARCHITECTURE_ID	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^#  define ARCHITECTURE_ID /;"	d	file:
 ARCHITECTURE_ID	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^#  define ARCHITECTURE_ID$/;"	d	file:
@@ -111,6 +114,7 @@ CMAKE_DEPENDS_CHECK_C	build/CMakeFiles/aml.dir/DependInfo.cmake	/^set(CMAKE_DEPE
 CMAKE_DEPENDS_GENERATOR	build/CMakeFiles/Makefile.cmake	/^set(CMAKE_DEPENDS_GENERATOR "Unix Makefiles")$/;"	v
 CMAKE_DEPENDS_LANGUAGES	build/CMakeFiles/aml.dir/DependInfo.cmake	/^set(CMAKE_DEPENDS_LANGUAGES$/;"	v
 CMAKE_DEPEND_INFO_FILES	build/CMakeFiles/Makefile.cmake	/^set(CMAKE_DEPEND_INFO_FILES$/;"	v
+CMAKE_EXPORT_COMPILE_COMMANDS	CMakeLists.txt	/^set(CMAKE_EXPORT_COMPILE_COMMANDS 1)$/;"	v
 CMAKE_FORCE_UNIX_PATHS	build/CMakeFiles/CMakeDirectoryInformation.cmake	/^set(CMAKE_FORCE_UNIX_PATHS 1)$/;"	v
 CMAKE_Fortran_TARGET_MODULE_DIR	build/CMakeFiles/aml.dir/DependInfo.cmake	/^set(CMAKE_Fortran_TARGET_MODULE_DIR "")$/;"	v
 CMAKE_HOST_SYSTEM	build/CMakeFiles/3.16.3/CMakeSystem.cmake	/^set(CMAKE_HOST_SYSTEM "Linux-5.4.0-107-generic")$/;"	v
@@ -119,7 +123,7 @@ CMAKE_HOST_SYSTEM_PROCESSOR	build/CMakeFiles/3.16.3/CMakeSystem.cmake	/^set(CMAK
 CMAKE_HOST_SYSTEM_VERSION	build/CMakeFiles/3.16.3/CMakeSystem.cmake	/^set(CMAKE_HOST_SYSTEM_VERSION "5.4.0-107-generic")$/;"	v
 CMAKE_INSTALL_COMPONENT	build/cmake_install.cmake	/^    set(CMAKE_INSTALL_COMPONENT "${COMPONENT}")$/;"	v
 CMAKE_INSTALL_COMPONENT	build/cmake_install.cmake	/^    set(CMAKE_INSTALL_COMPONENT)$/;"	v
-CMAKE_INSTALL_CONFIG_NAME	build/cmake_install.cmake	/^    set(CMAKE_INSTALL_CONFIG_NAME "")$/;"	v
+CMAKE_INSTALL_CONFIG_NAME	build/cmake_install.cmake	/^    set(CMAKE_INSTALL_CONFIG_NAME "Debug")$/;"	v
 CMAKE_INSTALL_MANIFEST	build/cmake_install.cmake	/^  set(CMAKE_INSTALL_MANIFEST "install_manifest.txt")$/;"	v
 CMAKE_INSTALL_MANIFEST	build/cmake_install.cmake	/^  set(CMAKE_INSTALL_MANIFEST "install_manifest_${CMAKE_INSTALL_COMPONENT}.txt")$/;"	v
 CMAKE_INSTALL_PREFIX	build/cmake_install.cmake	/^  set(CMAKE_INSTALL_PREFIX "\/usr\/local")$/;"	v
@@ -133,8 +137,7 @@ CMAKE_LINKER	build/CMakeFiles/3.16.3/CMakeCXXCompiler.cmake	/^set(CMAKE_LINKER "
 CMAKE_MAKEFILE_DEPENDS	build/CMakeFiles/Makefile.cmake	/^set(CMAKE_MAKEFILE_DEPENDS$/;"	v
 CMAKE_MAKEFILE_OUTPUTS	build/CMakeFiles/Makefile.cmake	/^set(CMAKE_MAKEFILE_OUTPUTS$/;"	v
 CMAKE_MAKEFILE_PRODUCTS	build/CMakeFiles/Makefile.cmake	/^set(CMAKE_MAKEFILE_PRODUCTS$/;"	v
-CMAKE_MODIFIED_HEADER	CMakeLists.txt	/^set(CMAKE_MODIFIED_HEADER acceleration\/kernels\/static_kernels_src.in.h)$/;"	v
-CMAKE_MODIFIED_HEADER_OUTPUT	CMakeLists.txt	/^set(CMAKE_MODIFIED_HEADER_OUTPUT acceleration\/kernels\/static_kernels_src.h)$/;"	v
+CMAKE_MODIFIED_HEADER	CMakeLists.txt	/^set(CMAKE_MODIFIED_HEADER acceleration\/kernels\/static_kernels_src.h)$/;"	v
 CMAKE_MT	build/CMakeFiles/3.16.3/CMakeCCompiler.cmake	/^set(CMAKE_MT "")$/;"	v
 CMAKE_MT	build/CMakeFiles/3.16.3/CMakeCXXCompiler.cmake	/^set(CMAKE_MT "")$/;"	v
 CMAKE_RANLIB	build/CMakeFiles/3.16.3/CMakeCCompiler.cmake	/^set(CMAKE_RANLIB "\/usr\/bin\/ranlib")$/;"	v
@@ -197,10 +200,16 @@ HEX	build/CMakeFiles/3.16.3/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^#define HEX(/
 ID_VOID_MAIN	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^# define ID_VOID_MAIN$/;"	d	file:
 KERNEL_SOURCE_DIRECTORY	CMakeLists.txt	/^set(KERNEL_SOURCE_DIRECTORY "acceleration\/kernels\/src")$/;"	v
 KERNEL_SOURCE_FILE_TYPE	CMakeLists.txt	/^set(KERNEL_SOURCE_FILE_TYPE "cl")$/;"	v
-KERNEL_STATIC_SOURCE_MAT_CL	acceleration/kernels/static_kernels_src.in.h	/^#define KERNEL_STATIC_SOURCE_MAT_CL /;"	d
+KERNEL_STATIC_SOURCE_MAT_CL	acceleration/kernels/static_kernels_src.h	/^#define KERNEL_STATIC_SOURCE_MAT_CL /;"	d
 KERNEL_STATIC_SOURCE_MAT_CL	build/acceleration/kernels/static_kernels_src.h	/^#define KERNEL_STATIC_SOURCE_MAT_CL /;"	d
+KERNEL_STATIC_SOURCE_MAT_CL	build/acceleration/kernels/static_kernels_src.in.h	/^#define KERNEL_STATIC_SOURCE_MAT_CL /;"	d
 Layer	ml/ml.h	/^typedef struct Layer {$/;"	s
 Layer	ml/ml.h	/^} Layer;$/;"	t	typeref:struct:Layer
+MAT_DIMENSION_MISTMATCH	matrix/mat.h	/^    MAT_DIMENSION_MISTMATCH,$/;"	e	enum:__anonde711da10303
+MAT_INITIALIZATION_FAILED	matrix/mat.h	/^    MAT_INITIALIZATION_FAILED,$/;"	e	enum:__anonde711da10303
+MAT_KERNEL_FAILURE	matrix/mat.h	/^    MAT_KERNEL_FAILURE$/;"	e	enum:__anonde711da10303
+MAT_NO_ERROR	matrix/mat.h	/^    MAT_NO_ERROR,$/;"	e	enum:__anonde711da10303
+MAT_UNINITIALIZED	matrix/mat.h	/^    MAT_UNINITIALIZED,$/;"	e	enum:__anonde711da10303
 MINGW	build/CMakeFiles/3.16.3/CMakeCCompiler.cmake	/^  set(MINGW 1)$/;"	v
 MINGW	build/CMakeFiles/3.16.3/CMakeCXXCompiler.cmake	/^  set(MINGW 1)$/;"	v
 MLINVALID_ARG	ml/ml.h	/^enum ML_ERR { MLNO_ERR=0, MLINVALID_ARG, MLLAYER_ERR, MLSIZE_MISMATCH };$/;"	e	enum:ML_ERR
@@ -212,21 +221,22 @@ ML_H	matrix/mat.h	/^#define ML_H$/;"	d
 ML_H	ml/ml.h	/^#define ML_H$/;"	d
 ML_PROG	ml/ml.h	/^#define ML_PROG /;"	d
 Matrix2	matrix/mat.h	/^} Matrix2;$/;"	t	typeref:struct:__anonde711da10108
+MatrixErr	matrix/mat.h	/^} MatrixErr;$/;"	t	typeref:enum:__anonde711da10303
 MatrixN	matrix/mat.h	/^} MatrixN;$/;"	t	typeref:struct:__anonde711da10208
 NONE	ml/ml.h	/^enum PAD_TYPE { SAME=0, NONE=1 };$/;"	e	enum:PAD_TYPE
 OCLAPIErr	acceleration/oclapi.h	/^} OCLAPIErr;$/;"	t	typeref:enum:__anon7f973d0c0203
 OCLAPIMem	acceleration/oclapi.h	/^} OCLAPIMem;$/;"	t	typeref:enum:__anon7f973d0c0103
 OCLAPI_H	acceleration/oclapi.h	/^#define OCLAPI_H$/;"	d
 OCLCPY	acceleration/oclapi.h	/^    OCLCPY=1 << _OCLCPY, $/;"	e	enum:__anon7f973d0c0103
-OCLINTERNAL_OPENCL_ERROR	acceleration/oclapi.h	/^    OCLINTERNAL_OPENCL_ERROR$/;"	e	enum:__anon7f973d0c0203
-OCLINVALID_ARG	acceleration/oclapi.h	/^    OCLINVALID_ARG,$/;"	e	enum:__anon7f973d0c0203
-OCLINVALID_NAME	acceleration/oclapi.h	/^    OCLINVALID_NAME,$/;"	e	enum:__anon7f973d0c0203
-OCLNO_ERR	acceleration/oclapi.h	/^    OCLNO_ERR=0,$/;"	e	enum:__anon7f973d0c0203
 OCLOUT	acceleration/oclapi.h	/^    OCLOUT=1 << _OCLOUT $/;"	e	enum:__anon7f973d0c0103
 OCLREAD	acceleration/oclapi.h	/^    OCLREAD=1 << _OCLREAD, $/;"	e	enum:__anon7f973d0c0103
-OCLUNINITIALIZED	acceleration/oclapi.h	/^    OCLUNINITIALIZED,$/;"	e	enum:__anon7f973d0c0203
-OCLUNKNOWN_SIZE	acceleration/oclapi.h	/^    OCLUNKNOWN_SIZE,$/;"	e	enum:__anon7f973d0c0203
 OCLWRITE	acceleration/oclapi.h	/^    OCLWRITE=1 << _OCLWRITE, $/;"	e	enum:__anon7f973d0c0103
+OCL_INTERNAL_OPENCL_ERROR	acceleration/oclapi.h	/^    OCL_INTERNAL_OPENCL_ERROR$/;"	e	enum:__anon7f973d0c0203
+OCL_INVALID_ARG	acceleration/oclapi.h	/^    OCL_INVALID_ARG,$/;"	e	enum:__anon7f973d0c0203
+OCL_INVALID_NAME	acceleration/oclapi.h	/^    OCL_INVALID_NAME,$/;"	e	enum:__anon7f973d0c0203
+OCL_NO_ERR	acceleration/oclapi.h	/^    OCL_NO_ERR=0,$/;"	e	enum:__anon7f973d0c0203
+OCL_UNINITIALIZED	acceleration/oclapi.h	/^    OCL_UNINITIALIZED,$/;"	e	enum:__anon7f973d0c0203
+OCL_UNKNOWN_SIZE	acceleration/oclapi.h	/^    OCL_UNKNOWN_SIZE,$/;"	e	enum:__anon7f973d0c0203
 OLD_GLOB	build/CMakeFiles/VerifyGlobs.cmake	/^set(OLD_GLOB$/;"	v
 PAD_TYPE	ml/ml.h	/^enum PAD_TYPE { SAME=0, NONE=1 };$/;"	g
 PARAMS	ml/ml.c	/^    } PARAMS;$/;"	t	function:bnorm	typeref:struct:bnorm::__anonc9c8b6370408	file:
@@ -253,8 +263,9 @@ SIMULATE_VERSION_MINOR	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^
 SIMULATE_VERSION_MINOR	build/CMakeFiles/3.16.3/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^#  define SIMULATE_VERSION_MINOR /;"	d	file:
 SIMULATE_VERSION_PATCH	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^#  define SIMULATE_VERSION_PATCH /;"	d	file:
 SIMULATE_VERSION_PATCH	build/CMakeFiles/3.16.3/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^#  define SIMULATE_VERSION_PATCH /;"	d	file:
-STATIC_KERNELS_SRC_H	acceleration/kernels/static_kernels_src.in.h	/^#define STATIC_KERNELS_SRC_H$/;"	d
+STATIC_KERNELS_SRC_H	acceleration/kernels/static_kernels_src.h	/^#define STATIC_KERNELS_SRC_H$/;"	d
 STATIC_KERNELS_SRC_H	build/acceleration/kernels/static_kernels_src.h	/^#define STATIC_KERNELS_SRC_H$/;"	d
+STATIC_KERNELS_SRC_H	build/acceleration/kernels/static_kernels_src.in.h	/^#define STATIC_KERNELS_SRC_H$/;"	d
 STRINGIFY	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^#define STRINGIFY(/;"	d	file:
 STRINGIFY	build/CMakeFiles/3.16.3/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^#define STRINGIFY(/;"	d	file:
 STRINGIFY_HELPER	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^#define STRINGIFY_HELPER(/;"	d	file:
@@ -277,6 +288,7 @@ __anonc9c8b6370308	ml/ml.c	/^    typedef struct {$/;"	s	function:fullyc	file:
 __anonc9c8b6370408	ml/ml.c	/^    typedef struct {$/;"	s	function:bnorm	file:
 __anonde711da10108	matrix/mat.h	/^typedef struct {$/;"	s
 __anonde711da10208	matrix/mat.h	/^typedef struct {$/;"	s
+__anonde711da10303	matrix/mat.h	/^typedef enum {$/;"	g
 _device_data	acceleration/oclapi.c	/^    cl_mem _device_data;$/;"	m	struct:__anon7f973d070108	typeref:typename:cl_mem	file:
 _dsize	acceleration/oclapi.c	/^    int _dsize;$/;"	m	struct:__anon7f973d070108	typeref:typename:int	file:
 _flags	acceleration/oclapi.c	/^    int _flags;$/;"	m	struct:__anon7f973d070108	typeref:typename:int	file:
@@ -293,7 +305,7 @@ acceleration/oclapi.o	build/Makefile	/^acceleration\/oclapi.o: acceleration\/ocl
 acceleration/oclapi.s	build/Makefile	/^acceleration\/oclapi.s: acceleration\/oclapi.c.s$/;"	t
 addlayer	ml/ml.c	/^void addlayer(Layer **machine, Layer **newl) {$/;"	f	typeref:typename:void
 all	build/Makefile	/^all: cmake_check_build_system$/;"	t
-aml	CMakeLists.txt	/^add_executable(aml main.c acceleration\/oclapi.c)$/;"	t
+aml	CMakeLists.txt	/^add_executable(aml main.c acceleration\/oclapi.c matrix\/mat.c)$/;"	t
 aml	CMakeLists.txt	/^project(aml)$/;"	p
 aml	build/Makefile	/^aml: cmake_check_build_system$/;"	t
 aml/fast	build/Makefile	/^aml\/fast:$/;"	t
@@ -304,18 +316,21 @@ bnorm	ml/ml.c	/^int bnorm(double *params, int paramsw, int unused0,$/;"	f	typere
 channels	ml/ml.c	/^        double channels;$/;"	m	struct:conv2d::__anonc9c8b6370108	typeref:typename:double	file:
 channels	ml/ml.c	/^        double channels;$/;"	m	struct:maxpool::__anonc9c8b6370208	typeref:typename:double	file:
 clGetErrorString	acceleration/oclapi.h	/^static const char *clGetErrorString(cl_int error) {$/;"	f	typeref:typename:const char *
+claCln	acceleration/oclapi.c	/^OCLAPIErr claCln() {$/;"	f	typeref:typename:OCLAPIErr
 claGetError	acceleration/oclapi.c	/^OCLAPIErr claGetError() {$/;"	f	typeref:typename:OCLAPIErr
 claGetErrorString	acceleration/oclapi.h	/^static const char *claGetErrorString(OCLAPIErr error) {$/;"	f	typeref:typename:const char *
 claGetExtendedError	acceleration/oclapi.c	/^cl_int claGetExtendedError() {$/;"	f	typeref:typename:cl_int
+claInit	acceleration/oclapi.c	/^OCLAPIErr claInit() {$/;"	f	typeref:typename:OCLAPIErr
 claRegisterFromSrc	acceleration/oclapi.c	/^OCLAPIErr claRegisterFromSrc(const char **src, int kerneln, ...) {$/;"	f	typeref:typename:OCLAPIErr
 claRunKernel	acceleration/oclapi.c	/^OCLAPIErr claRunKernel(const char *name, int wdim, size_t *gsz, size_t *lsz, ...) {$/;"	f	typeref:typename:OCLAPIErr
-clacln	acceleration/oclapi.c	/^OCLAPIErr clacln() {$/;"	f	typeref:typename:OCLAPIErr
-clainit	acceleration/oclapi.c	/^OCLAPIErr clainit() {$/;"	f	typeref:typename:OCLAPIErr
 clean	build/Makefile	/^clean:$/;"	t
 clean/fast	build/Makefile	/^clean\/fast: clean$/;"	t
 clerr	acceleration/oclapi.c	/^cl_int clerr = CL_SUCCESS;$/;"	v	typeref:typename:cl_int
 cmake_check_build_system	build/Makefile	/^cmake_check_build_system:$/;"	t
 cmake_force	build/Makefile	/^cmake_force:$/;"	t
+command	build/compile_commands.json	/^  "command": "\/usr\/bin\/cc  -I\\"\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/build\\"  -g  /;"	s	object:0
+command	build/compile_commands.json	/^  "command": "\/usr\/bin\/cc  -I\\"\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/build\\"  -g  /;"	s	object:1
+command	build/compile_commands.json	/^  "command": "\/usr\/bin\/cc  -I\\"\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/build\\"  -g  /;"	s	object:2
 const	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^# define const$/;"	d	file:
 context	acceleration/oclapi.c	/^cl_context context;$/;"	v	typeref:typename:cl_context
 conv2d	ml/ml.c	/^int conv2d(double *params, int paramsw, int unused0,$/;"	f	typeref:typename:int
@@ -326,9 +341,15 @@ default_target	build/Makefile	/^default_target: all$/;"	t
 depend	build/Makefile	/^depend:$/;"	t
 device_id	acceleration/oclapi.c	/^cl_device_id device_id;$/;"	v	typeref:typename:cl_device_id
 dimsz	matrix/mat.h	/^    int *dimsz;$/;"	m	struct:__anonde711da10208	typeref:typename:int *
+directory	build/compile_commands.json	/^  "directory": "\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/build",$/;"	s	object:0
+directory	build/compile_commands.json	/^  "directory": "\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/build",$/;"	s	object:1
+directory	build/compile_commands.json	/^  "directory": "\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/build",$/;"	s	object:2
 dropout	ml/ml.c	/^int dropout(double *prob, int unused0, int unused1,$/;"	f	typeref:typename:int
 edit_cache	build/Makefile	/^edit_cache:$/;"	t
 edit_cache/fast	build/Makefile	/^edit_cache\/fast: edit_cache$/;"	t
+file	build/compile_commands.json	/^  "file": "\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/acceleration\/oclapi.c"$/;"	s	object:1
+file	build/compile_commands.json	/^  "file": "\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/main.c"$/;"	s	object:0
+file	build/compile_commands.json	/^  "file": "\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/matrix\/mat.c"$/;"	s	object:2
 filterh	ml/ml.c	/^        double filterh;$/;"	m	struct:conv2d::__anonc9c8b6370108	typeref:typename:double	file:
 filtern	ml/ml.c	/^        double filtern;$/;"	m	struct:conv2d::__anonc9c8b6370108	typeref:typename:double	file:
 filterw	ml/ml.c	/^        double filterw;$/;"	m	struct:conv2d::__anonc9c8b6370108	typeref:typename:double	file:
@@ -363,6 +384,7 @@ isptr	acceleration/oclapi.c	/^    int isptr;$/;"	m	struct:__anon7f973d070108	typ
 kernel	acceleration/oclapi.c	/^    cl_kernel kernel;$/;"	m	struct:_oclapi_klist	typeref:typename:cl_kernel	file:
 kernels	acceleration/oclapi.c	/^_oclapi_Klist *kernels = NULL;$/;"	v	typeref:typename:_oclapi_Klist *
 learn	ml/ml.h	/^    void (*learn)(Mat *, double *, int);$/;"	m	struct:Layer	typeref:typename:void (*)(Mat *,double *,int)
+literal_size	matrix/mat.h	/^    int literal_size;$/;"	m	struct:__anonde711da10208	typeref:typename:int
 main	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^int main(argc, argv) int argc; char *argv[];$/;"	f
 main	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^void main() {}$/;"	f	typeref:typename:void
 main	build/CMakeFiles/3.16.3/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^int main(int argc, char* argv[])$/;"	f	typeref:typename:int
@@ -373,7 +395,21 @@ main.c.s	build/Makefile	/^main.c.s:$/;"	t
 main.i	build/Makefile	/^main.i: main.c.i$/;"	t
 main.o	build/Makefile	/^main.o: main.c.o$/;"	t
 main.s	build/Makefile	/^main.s: main.c.s$/;"	t
-makeMatrixN	matrix/mat.h	/^static inline MatrixN* makeMatrixN(int ndims, ...) {$/;"	f	typeref:typename:MatrixN *
+makeMatrix2	matrix/mat.h	/^static Matrix2* makeMatrix2(int width, int height) {$/;"	f	typeref:typename:Matrix2 *
+makeMatrixN	matrix/mat.h	/^static MatrixN* makeMatrixN(int ndims, ...) {$/;"	f	typeref:typename:MatrixN *
+matAdd	matrix/mat.c	/^MatrixErr matAdd(Matrix2 m1, Matrix2 m2, Matrix2 **r) {$/;"	f	typeref:typename:MatrixErr
+matGetErrorString	matrix/mat.h	/^static const char *matGetErrorString(MatrixErr error) {$/;"	f	typeref:typename:const char *
+matGetExtendedError	matrix/mat.h	/^static inline cl_int matGetExtendedError() {$/;"	f	typeref:typename:cl_int
+matInit	matrix/mat.c	/^MatrixErr matInit() {$/;"	f	typeref:typename:MatrixErr
+matMul	matrix/mat.c	/^MatrixErr matMul(Matrix2 m1, Matrix2 m2, Matrix2 **r) {$/;"	f	typeref:typename:MatrixErr
+matPrintMatrix2	matrix/mat.h	/^static inline void matPrintMatrix2(Matrix2 m) {$/;"	f	typeref:typename:void
+matinit	matrix/mat.c	/^bool matinit = false;$/;"	v	typeref:typename:bool
+matrix/mat.c.i	build/Makefile	/^matrix\/mat.c.i:$/;"	t
+matrix/mat.c.o	build/Makefile	/^matrix\/mat.c.o:$/;"	t
+matrix/mat.c.s	build/Makefile	/^matrix\/mat.c.s:$/;"	t
+matrix/mat.i	build/Makefile	/^matrix\/mat.i: matrix\/mat.c.i$/;"	t
+matrix/mat.o	build/Makefile	/^matrix\/mat.o: matrix\/mat.c.o$/;"	t
+matrix/mat.s	build/Makefile	/^matrix\/mat.s: matrix\/mat.c.s$/;"	t
 maxpool	ml/ml.c	/^int maxpool(double *params, int paramsw, int unused0,$/;"	f	typeref:typename:int
 mean	ml/ml.c	/^        double mean;$/;"	m	struct:bnorm::__anonc9c8b6370408	typeref:typename:double	file:
 mklayer	ml/ml.h	/^INLINE void mklayer(Layer **machine, int inw, int inh, void *transform, $/;"	f	typeref:typename:INLINE void
@@ -383,8 +419,9 @@ name	acceleration/oclapi.c	/^    char *name;$/;"	m	struct:_oclapi_klist	typeref:
 ndims	matrix/mat.h	/^    int ndims;$/;"	m	struct:__anonde711da10208	typeref:typename:int
 next	acceleration/oclapi.c	/^    struct _oclapi_klist *next;$/;"	m	struct:_oclapi_klist	typeref:struct:_oclapi_klist *	file:
 next	ml/ml.h	/^    struct Layer *next;$/;"	m	struct:Layer	typeref:struct:Layer *
-oclerr	acceleration/oclapi.c	/^OCLAPIErr oclerr = OCLNO_ERR;$/;"	v	typeref:typename:OCLAPIErr
+oclerr	acceleration/oclapi.c	/^OCLAPIErr oclerr = OCL_NO_ERR;$/;"	v	typeref:typename:OCLAPIErr
 oclinit	acceleration/oclapi.c	/^bool oclinit = false;$/;"	v	typeref:typename:bool
+offset	matrix/mat.h	/^    int offset;$/;"	m	struct:__anonde711da10208	typeref:typename:int
 offset	ml/ml.c	/^        double offset;$/;"	m	struct:bnorm::__anonc9c8b6370408	typeref:typename:double	file:
 outsz	ml/ml.c	/^        double outsz;$/;"	m	struct:fullyc::__anonc9c8b6370308	typeref:typename:double	file:
 pad	ml/ml.c	/^        double pad;$/;"	m	struct:conv2d::__anonc9c8b6370108	typeref:typename:double	file:

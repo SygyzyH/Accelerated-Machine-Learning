@@ -46,7 +46,7 @@ cl_device_id device_id;
 cl_context context;
 cl_command_queue queue;
 
-OCLAPIErr oclerr = OCLNO_ERR;
+OCLAPIErr oclerr = OCL_NO_ERR;
 cl_int clerr = CL_SUCCESS;
 
 bool oclinit = false;
@@ -59,7 +59,7 @@ returns the last error and reset it
 */
 OCLAPIErr claGetError() {
     OCLAPIErr e = oclerr;
-    oclerr = OCLNO_ERR;
+    oclerr = OCL_NO_ERR;
     return e;
 }
 
@@ -77,7 +77,8 @@ cl_int claGetExtendedError() {
 /*
 returns 0 on success
 */
-OCLAPIErr clainit() {
+OCLAPIErr claInit() {
+    if (oclinit) return OCL_NO_ERR;
     int err;
     
     if ((err = clGetPlatformIDs(1, &cpPlatform, NULL))) goto ExitErrorCL;
@@ -99,7 +100,7 @@ OCLAPIErr clainit() {
     
     oclinit = true;
     
-    return OCLNO_ERR;
+    return OCL_NO_ERR;
     
     ExitErrorOCL:
     oclerr = err;
@@ -107,23 +108,25 @@ OCLAPIErr clainit() {
     return oclerr;
     
     ExitErrorCL:
-    oclerr = OCLINTERNAL_OPENCL_ERROR;
+    oclerr = OCL_INTERNAL_OPENCL_ERROR;
     clerr = err;
     
     return oclerr;
 }
 
 // Cleanup registery
-OCLAPIErr clacln() {
-/*returns 0 on success*/
-    if (!oclinit) return OCLUNINITIALIZED;
+/*
+ * returns 0 on success
+ * */
+OCLAPIErr claCln() {
+    if (!oclinit) return OCL_UNINITIALIZED;
     
     _oclapi_Klist *k = kernels;
     
     while (k != NULL) {
         // TODO: Programs will repeat if multiple kernels are added at once.
         // This will cause clReleaseProgram to return an error. This is not
-        // problematic per say but not best practice and should be avoided.
+        // problematic per say but bad practice and should be avoided.
         cl_program prog;
         clGetKernelInfo(k->kernel, CL_KERNEL_PROGRAM, sizeof(cl_program), &prog, NULL);
         clReleaseProgram(prog);
@@ -138,26 +141,23 @@ OCLAPIErr clacln() {
     clReleaseCommandQueue(queue);
     clReleaseContext(context);
     
-    puts("Cleanup successful.");
-    
-    return OCLNO_ERR;
+    return OCL_NO_ERR;
 }
 
 // Register a kerenel so it can be run
 /*
-src - source code string
-kerneln - number of kernels in source code
-... - string names of the kernels in source code
-returns 0 on success
-*/
-/*
-Before a function is ran using the ocl api, it must first be
-registered. The user needs to supply a source program and any
-number of kernels in that program. All names must be unique.
-*/
+ * Before a function is ran using the ocl api, it must first be
+ * registered. The user needs to supply a source program and any
+ * number of kernels in that program. All names must be unique.
+ * 
+ * `src` - source code string.
+ * `kerneln` - number of kernels in source code.
+ * `...` - string names of the kernels in source code.
+ * returns 0 on success
+ * */
 OCLAPIErr claRegisterFromSrc(const char **src, int kerneln, ...) {
     int err;
-    if (!oclinit) { err = OCLUNINITIALIZED; goto ExitErrorOCL; };
+    if (!oclinit) { err = OCL_UNINITIALIZED; goto ExitErrorOCL; };
     
     cl_program prog = clCreateProgramWithSource(context, 1, src, NULL, &err);
     if (err) goto ExitErrorCL;
@@ -187,7 +187,7 @@ OCLAPIErr claRegisterFromSrc(const char **src, int kerneln, ...) {
             while (k->next != NULL) {
                 if (strcmp(k->name, name) == 0) { 
                     va_end(valist);
-                    return OCLINVALID_NAME;
+                    return OCL_INVALID_NAME;
                 }
                 
                 k = k->next;
@@ -220,7 +220,7 @@ OCLAPIErr claRegisterFromSrc(const char **src, int kerneln, ...) {
             } else {
                 va_end(valist);
                 puts("INVALID ARG");
-                err = OCLINVALID_ARG;
+                err = OCL_INVALID_ARG;
                 goto ExitErrorOCL;
             }
             
@@ -237,7 +237,7 @@ OCLAPIErr claRegisterFromSrc(const char **src, int kerneln, ...) {
     
     va_end(valist);
     
-    return OCLNO_ERR;
+    return OCL_NO_ERR;
     
     ExitErrorOCL:
     oclerr = err;
@@ -245,7 +245,7 @@ OCLAPIErr claRegisterFromSrc(const char **src, int kerneln, ...) {
     return oclerr;
     
     ExitErrorCL:
-    oclerr = OCLINTERNAL_OPENCL_ERROR;
+    oclerr = OCL_INTERNAL_OPENCL_ERROR;
     clerr = err;
     
     return oclerr;
@@ -253,17 +253,18 @@ OCLAPIErr claRegisterFromSrc(const char **src, int kerneln, ...) {
 
 // Run registered kernel
 /*
-name - name of the kernel
-wdim - number of dimensions to run the kerenl in the GPU (typically between 1 to 3, see OpenCL docs)
-gsz - array of sizes for the global run size. Array length should be dim (see OpenCL docs) 
-lsz - array of sizes for the local run size. Array length should be dim (see OpenCL docs)
-... - parameters for the function. After every pointer there must follow: size of the pointer, operation flags
-returns 0 on success
-*/
+ * For output variables, the user must allocate the correct amount of memory.
+ * `name` - name of the kernel.
+ * `wdim` - number of dimensions to run the kerenl in the GPU (typically between 1 to 3, see OpenCL docs).
+ * `gsz` - array of sizes for the global run size. Array length should be dim (see OpenCL docs).
+ * `lsz` - array of sizes for the local run size. Array length should be dim (see OpenCL docs).
+ * `...` - parameters for the function. After every pointer there must follow: the size of the pointer, operation flags.
+ * returns 0 on success
+ * */
 OCLAPIErr claRunKernel(const char *name, int wdim, size_t *gsz, size_t *lsz, ...) {
     int err;
     
-    if (!oclinit) { err = OCLUNINITIALIZED; goto ExitErrorOCL; }
+    if (!oclinit) { err = OCL_UNINITIALIZED; goto ExitErrorOCL; }
     
     _oclapi_Klist *k = kernels;
     
@@ -272,7 +273,7 @@ OCLAPIErr claRunKernel(const char *name, int wdim, size_t *gsz, size_t *lsz, ...
         k = k->next;
     }
     
-    if (k == NULL) { err = OCLINVALID_NAME; goto ExitErrorOCL; }
+    if (k == NULL) { err = OCL_INVALID_NAME; goto ExitErrorOCL; }
     
     va_list valist;
     va_start(valist, lsz);
@@ -292,9 +293,7 @@ OCLAPIErr claRunKernel(const char *name, int wdim, size_t *gsz, size_t *lsz, ...
                 k->argv[i]._host_data = (double *) va_arg(valist, double *);
             else {
                 va_end(valist);
-                // TODO: Error message
-                puts("TODO: Error message INVALID ARG");
-                err = OCLINVALID_ARG;
+                err = OCL_INVALID_ARG;
                 goto ExitErrorOCL;
             }
             
@@ -322,7 +321,7 @@ OCLAPIErr claRunKernel(const char *name, int wdim, size_t *gsz, size_t *lsz, ...
                 
                 default:
                 va_end(valist);
-                err = OCLINVALID_ARG;
+                err = OCL_INVALID_ARG;
                 goto ExitErrorOCL;
             }
             
@@ -355,9 +354,7 @@ OCLAPIErr claRunKernel(const char *name, int wdim, size_t *gsz, size_t *lsz, ...
                 data = &(double) { va_arg(valist, double) };
             else {
                 va_end(valist);
-                // TODO: Error message
-                puts("TODO: Error message INVALID ARG");
-                return OCLINVALID_ARG;
+                return OCL_INVALID_ARG;
             }
         }
         
@@ -383,7 +380,7 @@ OCLAPIErr claRunKernel(const char *name, int wdim, size_t *gsz, size_t *lsz, ...
     
     clFinish(queue);
     
-    return OCLNO_ERR;
+    return OCL_NO_ERR;
     
     ExitErrorOCL:
     oclerr = err;
@@ -391,7 +388,7 @@ OCLAPIErr claRunKernel(const char *name, int wdim, size_t *gsz, size_t *lsz, ...
     return oclerr;
     
     ExitErrorCL:
-    oclerr = OCLINTERNAL_OPENCL_ERROR;
+    oclerr = OCL_INTERNAL_OPENCL_ERROR;
     clerr = err;
     
     return oclerr;

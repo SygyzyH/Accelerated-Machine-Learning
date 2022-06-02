@@ -1,37 +1,35 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "matrix/mat.h"
 #include "acceleration/oclapi.h"
-#include "acceleration/kernels/static_kernels_src.h"
+#include <acceleration/kernels/static_kernels_src.h>
 
 int main() {
-  OCLAPIErr error;
+    int error;
 
-  error = clainit();
-  printf("err: %s\n", claGetErrorString(error));
-  printf("oclapi internal: %s\n", clGetErrorString(claGetExtendedError()));
+    error = claInit();
+    printf("err: %s\n", claGetErrorString(error));
+    printf("oclapi internal: %s\n", clGetErrorString(claGetExtendedError()));
 
-  const char *matsrc = KERNEL_STATIC_SOURCE_MAT_CL;
-  error = claRegisterFromSrc(&matsrc, 5, "matmul", "matadd", "matsub", "matmuls",
-                         "matadds");
-  printf("err: %s\n", claGetErrorString(error));
+    error = matInit();
+    
+    //const int width = 2, height = 2;
+    Matrix2 *m1 = makeMatrix2(3, 2);
+    Matrix2 *m2 = makeMatrix2(4, 3);
 
-  double a[] = {1, 1, 1, 1};
-  double b[] = {1, 2, 77, 2};
-  double *r = malloc(sizeof(double) * 4);
-  size_t gz[] = {2, 2};
+    m1->data = (double []) { 2, 1, 1, 1, 1, 1 };
+    m2->data = (double []) { 3, 2, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1 };
+    matPrintMatrix2(*m2);
 
-  error = claRunKernel("matadd", 2, gz, NULL, a, 4, OCLCPY | OCLREAD, b, 4,
-                       OCLCPY | OCLREAD, 2, 2, r, 4, OCLOUT | OCLWRITE);
-  printf("err: %s\n", claGetErrorString(error));
+    Matrix2 *r;
+    printf("error: %s\n", matGetErrorString(matMul(*m1, *m2, &r)));
 
-  puts("result: ");
-  for (int i = 0; i < 2; i++) {
-    for (int j = 0; j < 2; j++) {
-      printf("%lf, ", r[j + i * 2]);
-    }
-    puts("");
-    }
+    puts("result: ");
+    if (r != NULL)
+        matPrintMatrix2(*r);
+    else
+        printf("NULL");
     
     return 0;
 }

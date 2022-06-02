@@ -1,12 +1,13 @@
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 set(CMAKE_C_STANDARD 99)
 # This header will be modified with CMake defines
-set(CMAKE_MODIFIED_HEADER acceleration/kernels/static_kernels_src.in.h)
-# This will be the name that the code can use to accsess the header
-set(CMAKE_MODIFIED_HEADER_OUTPUT acceleration/kernels/static_kernels_src.h)
+set(CMAKE_MODIFIED_HEADER acceleration/kernels/static_kernels_src.h)
 # Kernels are files located in KERNEL_SOURCE_DIRECTORY that are of type KERNEL_SOURCE_FILE_TYPE
 set(KERNEL_SOURCE_DIRECTORY "acceleration/kernels/src")
 set(KERNEL_SOURCE_FILE_TYPE "cl")
+
+# TODO: Only do this if in debug mode
+set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 project(aml)
 
@@ -16,7 +17,7 @@ project(aml)
 # https://github.com/fireice-uk/xmr-stak-amd/issues/97
 find_package(OpenCL REQUIRED)
 
-add_executable(aml main.c acceleration/oclapi.c)
+add_executable(aml main.c acceleration/oclapi.c matrix/mat.c)
 
 # Put kernel sources into program build, staticly.
 # Strings at the CMAKE_MODIFIED_HEADER_OUTPUT header constructed
@@ -31,16 +32,19 @@ foreach(FILE_NAME ${KERNEL_SOURCES})
 	# For example, for "file/path/kernel_name.cl" the REGEX will return "kernel_name".
 	string(REGEX MATCH "\/([^\/ ]+)\.${KERNEL_SOURCE_FILE_TYPE}$" THIS_FILE_NAME ${FILE_NAME})
 	string(TOUPPER ${CMAKE_MATCH_1} THIS_FILE_NAME)
-	string(APPEND BASE_NAME ${THIS_FILE_NAME} "_" ${KERNEL_SOURCE_FILE_TYPE_UPPER})
-	file(STRINGS ${FILE_NAME} UNPREP_TEMP_STRING)
+        # Append _CL
+        string(APPEND BASE_NAME ${THIS_FILE_NAME} "_" ${KERNEL_SOURCE_FILE_TYPE_UPPER})
+        file(STRINGS ${FILE_NAME} UNPREP_TEMP_STRING)
 	# No option to not consume newlines and still keep them in parsed output
-	list(JOIN UNPREP_TEMP_STRING "\\n" JOINT_TEMP_STRING)
+        list(JOIN UNPREP_TEMP_STRING "\\n" JOINT_TEMP_STRING)
 	# Escape parentheses
-	string(REPLACE "\"" "\\\"" ${BASE_NAME} "${JOINT_TEMP_STRING}")
-	message("Defined source code \"@${BASE_NAME}@\".")
+        string(REPLACE "\"" "\\\"" JOINT_ESCAPED_TEMP_STRING "${JOINT_TEMP_STRING}")
+        # Remove any opencl header inside kernel
+        string(REGEX REPLACE "#include <opencl-c.h>|#include <opencl-c-base.h>" "" ${BASE_NAME} "${JOINT_ESCAPED_TEMP_STRING}")
+        message("Defined source code \"@${BASE_NAME}@\".")
 endforeach()
 
-configure_file(${CMAKE_MODIFIED_HEADER} ${CMAKE_MODIFIED_HEADER_OUTPUT} @ONLY)
+configure_file(${CMAKE_MODIFIED_HEADER} ${CMAKE_MODIFIED_HEADER} ESCAPE_QUOTES @ONLY)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 target_link_libraries(aml OpenCL::OpenCL)

@@ -30,17 +30,16 @@ typedef enum {
 } OCLAPIMem;
 
 typedef enum {
-    OCLNO_ERR=0,
-    OCLINVALID_NAME,
-    OCLUNKNOWN_SIZE,
-    OCLINVALID_ARG,
-    OCLUNINITIALIZED,
-    OCLINTERNAL_OPENCL_ERROR
+    OCL_NO_ERR=0,
+    OCL_INVALID_NAME,
+    OCL_UNKNOWN_SIZE,
+    OCL_INVALID_ARG,
+    OCL_UNINITIALIZED,
+    OCL_INTERNAL_OPENCL_ERROR
 } OCLAPIErr;
 
-// Initialize 
-OCLAPIErr clainit();
-OCLAPIErr clacln();
+OCLAPIErr claInit();
+OCLAPIErr claCln();
 OCLAPIErr claRegisterFromSrc(const char **src, int kerneln, ...);
 OCLAPIErr claRunKernel(const char *name, int wdim, size_t *gsz, size_t *lsz, ...);
 OCLAPIErr claGetError();
@@ -53,12 +52,12 @@ returns string describing the error name
 */
 static const char *claGetErrorString(OCLAPIErr error) {
     switch (error) {
-        case OCLNO_ERR: return "OCLNO_ERR";
-        case OCLINVALID_NAME: return "OCLINVALID_NAME";
-        case OCLUNKNOWN_SIZE: return "OCLUNKNOWN_SIZE";
-        case OCLINVALID_ARG: return "OCLINVALID_ARG";
-        case OCLUNINITIALIZED: return "OCLUNINITIALIZED";
-        case OCLINTERNAL_OPENCL_ERROR: return "OCLINTERNAL_OPENCL_ERROR";
+        case OCL_NO_ERR: return "OCL_NO_ERR";
+        case OCL_INVALID_NAME: return "OCL_INVALID_NAME";
+        case OCL_UNKNOWN_SIZE: return "OCL_UNKNOWN_SIZE";
+        case OCL_INVALID_ARG: return "OCL_INVALID_ARG";
+        case OCL_UNINITIALIZED: return "OCL_UNINITIALIZED";
+        case OCL_INTERNAL_OPENCL_ERROR: return "OCL_INTERNAL_OPENCL_ERROR";
         default: return "Unknown OpenCL API error";
     }
 }
