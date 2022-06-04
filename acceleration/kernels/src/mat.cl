@@ -1,5 +1,6 @@
 // TODO: Kernels should use stride instead of width for indexing.
 #include <opencl-c-base.h>
+#include "../include/matutil.h"
 
 void sumArray(__local double **tmp, int bsize, int li);
 

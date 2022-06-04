@@ -17,7 +17,7 @@ project(aml)
 # https://github.com/fireice-uk/xmr-stak-amd/issues/97
 find_package(OpenCL REQUIRED)
 
-add_executable(aml main.c acceleration/oclapi.c matrix/mat.c)
+add_executable(aml main.c acceleration/oclapi.c matrix/mat.c ml/layers.c ml/machine.c)
 
 # Put kernel sources into program build, staticly.
 # Strings at the CMAKE_MODIFIED_HEADER_OUTPUT header constructed
@@ -44,7 +44,7 @@ foreach(FILE_NAME ${KERNEL_SOURCES})
         message("Defined source code \"@${BASE_NAME}@\".")
 endforeach()
 
-configure_file(${CMAKE_MODIFIED_HEADER} ${CMAKE_MODIFIED_HEADER} ESCAPE_QUOTES @ONLY)
+configure_file(${CMAKE_MODIFIED_HEADER} ${CMAKE_MODIFIED_HEADER} @ONLY)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-target_link_libraries(aml OpenCL::OpenCL)
+target_link_libraries(aml OpenCL::OpenCL m)

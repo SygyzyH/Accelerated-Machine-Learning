@@ -7,12 +7,9 @@
 
 /* 
 Internal ML functions, implemenation may vary in the future.
- For the user end, use the function names to specify layer type 
+For the user end, use the function names to specify layer type 
 when making a machine.
  */
-// TODO: Layer functions need to run on the GPU, most of 
-// this can be easily done using the math library.
-// TODO: To ensure MATLAB compatibilty, use activations(trainedNet, audioIn, INDEX)
 
 bool mlinited = false;
 

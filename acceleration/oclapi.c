@@ -140,6 +140,8 @@ OCLAPIErr claCln() {
     
     clReleaseCommandQueue(queue);
     clReleaseContext(context);
+
+    puts("Cleaned OpenCL API successfuly.");
     
     return OCL_NO_ERR;
 }
@@ -164,7 +166,7 @@ OCLAPIErr claRegisterFromSrc(const char **src, int kerneln, ...) {
     // Build with kernel arg info flag to retrive it later. This solution thankfully
     // allows for building programs and having access to some of the information form
     // the compilation process, allowing for this whole library to feasably exist.
-    err = clBuildProgram(prog, 0, NULL, "-cl-kernel-arg-info", NULL, NULL);
+    err = clBuildProgram(prog, 0, NULL, "-cl-kernel-arg-info -I acceleration/kernels/include", NULL, NULL);
     if (err == CL_BUILD_PROGRAM_FAILURE) {
         char buildlog[BUILD_LOG_SIZE];
         clGetProgramBuildInfo(prog, device_id, CL_PROGRAM_BUILD_LOG, (size_t) BUILD_LOG_SIZE, buildlog, NULL);
