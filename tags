@@ -11,6 +11,7 @@ $(VERBOSE).SILENT	build/Makefile	/^$(VERBOSE).SILENT:$/;"	t
 2	build/compile_commands.json	/^{$/;"	o
 3	build/compile_commands.json	/^{$/;"	o
 4	build/compile_commands.json	/^{$/;"	o
+5	build/compile_commands.json	/^{$/;"	o
 ARCHITECTURE_ID	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^#   define ARCHITECTURE_ID /;"	d	file:
 ARCHITECTURE_ID	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^#  define ARCHITECTURE_ID /;"	d	file:
 ARCHITECTURE_ID	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^#  define ARCHITECTURE_ID$/;"	d	file:
@@ -208,13 +209,16 @@ KERNEL_STATIC_SOURCE_MAT_CL	build/acceleration/kernels/static_kernels_src.in.h	/
 Layer	ml/.src/mlsrc.h	/^typedef struct Layer {$/;"	s
 Layer	ml/.src/mlsrc.h	/^} Layer;$/;"	t	typeref:struct:Layer
 Layer	ml/ml.h	/^} Layer;$/;"	t	typeref:struct:layer
-MAT_DIMENSION_MISTMATCH	matrix/mat.h	/^    MAT_DIMENSION_MISTMATCH,$/;"	e	enum:__anonde711da10403
+LearningInstance	ml/ml.h	/^} LearningInstance;$/;"	t	typeref:struct:learninginstance
+MAT_DIMENSION_MISTMATCH	matrix/mat.h	/^    MAT_DIMENSION_MISTMATCH,$/;"	e	enum:__anonde711da10303
+MAT_DIMENSION_OUT_OF_RANGE	matrix/mat.h	/^    MAT_DIMENSION_OUT_OF_RANGE,$/;"	e	enum:__anonde711da10303
 MAT_H	matrix/mat.h	/^#define MAT_H$/;"	d
-MAT_INITIALIZATION_FAILED	matrix/mat.h	/^    MAT_INITIALIZATION_FAILED,$/;"	e	enum:__anonde711da10403
-MAT_KERNEL_FAILURE	matrix/mat.h	/^    MAT_KERNEL_FAILURE,$/;"	e	enum:__anonde711da10403
-MAT_NO_ERROR	matrix/mat.h	/^    MAT_NO_ERROR,$/;"	e	enum:__anonde711da10403
-MAT_NULL_PTR	matrix/mat.h	/^    MAT_NULL_PTR$/;"	e	enum:__anonde711da10403
-MAT_UNINITIALIZED	matrix/mat.h	/^    MAT_UNINITIALIZED,$/;"	e	enum:__anonde711da10403
+MAT_INITIALIZATION_FAILED	matrix/mat.h	/^    MAT_INITIALIZATION_FAILED,$/;"	e	enum:__anonde711da10303
+MAT_KERNEL_FAILURE	matrix/mat.h	/^    MAT_KERNEL_FAILURE,$/;"	e	enum:__anonde711da10303
+MAT_NO_ERROR	matrix/mat.h	/^    MAT_NO_ERROR,$/;"	e	enum:__anonde711da10303
+MAT_NULL_PTR	matrix/mat.h	/^    MAT_NULL_PTR$/;"	e	enum:__anonde711da10303
+MAT_PRINT_CUTOFF	matrix/mat.h	/^#define MAT_PRINT_CUTOFF /;"	d
+MAT_UNINITIALIZED	matrix/mat.h	/^    MAT_UNINITIALIZED,$/;"	e	enum:__anonde711da10303
 MINGW	build/CMakeFiles/3.16.3/CMakeCCompiler.cmake	/^  set(MINGW 1)$/;"	v
 MINGW	build/CMakeFiles/3.16.3/CMakeCXXCompiler.cmake	/^  set(MINGW 1)$/;"	v
 MLErr	ml/ml.h	/^} MLErr;$/;"	t	typeref:enum:__anonc9c8b63c0103
@@ -222,18 +226,25 @@ MLINVALID_ARG	ml/.src/mlsrc.h	/^enum ML_ERR { MLNO_ERR=0, MLINVALID_ARG, MLLAYER
 MLLAYER_ERR	ml/.src/mlsrc.h	/^enum ML_ERR { MLNO_ERR=0, MLINVALID_ARG, MLLAYER_ERR, MLSIZE_MISMATCH };$/;"	e	enum:ML_ERR
 MLNO_ERR	ml/.src/mlsrc.h	/^enum ML_ERR { MLNO_ERR=0, MLINVALID_ARG, MLLAYER_ERR, MLSIZE_MISMATCH };$/;"	e	enum:ML_ERR
 MLSIZE_MISMATCH	ml/.src/mlsrc.h	/^enum ML_ERR { MLNO_ERR=0, MLINVALID_ARG, MLLAYER_ERR, MLSIZE_MISMATCH };$/;"	e	enum:ML_ERR
+MLWeightInitializerType	ml/ml.h	/^} MLWeightInitializerType;$/;"	t	typeref:enum:__anonc9c8b63c0303
 ML_ERR	ml/.src/mlsrc.h	/^enum ML_ERR { MLNO_ERR=0, MLINVALID_ARG, MLLAYER_ERR, MLSIZE_MISMATCH };$/;"	g
 ML_H	ml/.src/mlsrc.h	/^#define ML_H$/;"	d
 ML_H	ml/ml.h	/^#define ML_H$/;"	d
+ML_LAYER_INTERNAL_ERROR	ml/ml.h	/^    ML_LAYER_INTERNAL_ERROR,$/;"	e	enum:__anonc9c8b63c0103
+ML_LAYER_INVALID_INPUT_DIMS	ml/ml.h	/^    ML_LAYER_INVALID_INPUT_DIMS,$/;"	e	enum:__anonc9c8b63c0103
 ML_LAYER_INVALID_PARAMETERS	ml/ml.h	/^    ML_LAYER_INVALID_PARAMETERS,$/;"	e	enum:__anonc9c8b63c0103
+ML_LAYER_INVALID_WEIGHTS	ml/ml.h	/^    ML_LAYER_INVALID_WEIGHTS,$/;"	e	enum:__anonc9c8b63c0103
+ML_MACHINE_UNINITIALIZED_LAYER	ml/ml.h	/^    ML_MACHINE_UNINITIALIZED_LAYER,$/;"	e	enum:__anonc9c8b63c0103
 ML_NO_ERR	ml/ml.h	/^    ML_NO_ERR,$/;"	e	enum:__anonc9c8b63c0103
 ML_NULL_PTR	ml/ml.h	/^    ML_NULL_PTR$/;"	e	enum:__anonc9c8b63c0103
 ML_PROG	ml/.src/mlsrc.h	/^#define ML_PROG /;"	d
+ML_PROTOTYPE_LAYER	ml/ml.h	/^#define ML_PROTOTYPE_LAYER(/;"	d
+ML_PROTOTYPE_OPTIMIZER	ml/ml.h	/^#define ML_PROTOTYPE_OPTIMIZER(/;"	d
+ML_WEIGHT_INITIALIZER_ONES	ml/ml.h	/^    ML_WEIGHT_INITIALIZER_ONES$/;"	e	enum:__anonc9c8b63c0303
+ML_WEIGHT_INITIALIZER_ZEROS	ml/ml.h	/^    ML_WEIGHT_INITIALIZER_ZEROS,$/;"	e	enum:__anonc9c8b63c0303
 Machine	ml/ml.h	/^} Machine;$/;"	t	typeref:struct:__anonc9c8b63c0208
 Matrix2	matrix/mat.h	/^} Matrix2;$/;"	t	typeref:struct:__anonde711da10108
-Matrix3	matrix/mat.h	/^} Matrix3;$/;"	t	typeref:struct:__anonde711da10208
-MatrixErr	matrix/mat.h	/^} MatrixErr;$/;"	t	typeref:enum:__anonde711da10403
-MatrixN	matrix/mat.h	/^} MatrixN;$/;"	t	typeref:struct:__anonde711da10308
+MatrixErr	matrix/mat.h	/^} MatrixErr;$/;"	t	typeref:enum:__anonde711da10303
 NONE	ml/.src/mlsrc.h	/^enum PAD_TYPE { SAME=0, NONE=1 };$/;"	e	enum:PAD_TYPE
 OCLAPIErr	acceleration/oclapi.h	/^} OCLAPIErr;$/;"	t	typeref:enum:__anon7f973d0c0203
 OCLAPIMem	acceleration/oclapi.h	/^} OCLAPIMem;$/;"	t	typeref:enum:__anon7f973d0c0103
@@ -282,6 +293,7 @@ STRINGIFY	build/CMakeFiles/3.16.3/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^#define
 STRINGIFY_HELPER	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^#define STRINGIFY_HELPER(/;"	d	file:
 STRINGIFY_HELPER	build/CMakeFiles/3.16.3/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^#define STRINGIFY_HELPER(/;"	d	file:
 SUFFIXES	build/Makefile	/^SUFFIXES =$/;"	m
+Tensor	matrix/mat.h	/^} Tensor;$/;"	t	typeref:struct:__anonde711da10208
 UNIX	build/CMakeFiles/3.16.3/CMakeCCompiler.cmake	/^  set(UNIX 1)$/;"	v
 UNIX	build/CMakeFiles/3.16.3/CMakeCXXCompiler.cmake	/^  set(UNIX 1)$/;"	v
 _OCLAPI_MEM_OP	acceleration/oclapi.h	/^enum _OCLAPI_MEM_OP { _OCLCPY, _OCLREAD, _OCLWRITE, _OCLOUT };$/;"	g
@@ -299,14 +311,18 @@ __anon7f973d0c0103	acceleration/oclapi.h	/^typedef enum {$/;"	g
 __anon7f973d0c0203	acceleration/oclapi.h	/^typedef enum {$/;"	g
 __anonc9c8b63c0103	ml/ml.h	/^typedef enum {$/;"	g
 __anonc9c8b63c0208	ml/ml.h	/^typedef struct {$/;"	s
+__anonc9c8b63c0303	ml/ml.h	/^typedef enum {$/;"	g
 __anonde711da10108	matrix/mat.h	/^typedef struct {$/;"	s
 __anonde711da10208	matrix/mat.h	/^typedef struct {$/;"	s
-__anonde711da10308	matrix/mat.h	/^typedef struct {$/;"	s
-__anonde711da10403	matrix/mat.h	/^typedef enum {$/;"	g
+__anonde711da10303	matrix/mat.h	/^typedef enum {$/;"	g
+_all_layers_initialized	ml/ml.h	/^    int _all_layers_initialized;$/;"	m	struct:__anonc9c8b63c0208	typeref:typename:int
+_cache	ml/ml.h	/^    void *_cache;$/;"	m	struct:layer	typeref:typename:void *
+_cache	ml/ml.h	/^    void *_cache;$/;"	m	struct:learninginstance	typeref:typename:void *
 _device_data	acceleration/oclapi.c	/^    cl_mem _device_data;$/;"	m	struct:__anon7f973d070108	typeref:typename:cl_mem	file:
 _dsize	acceleration/oclapi.c	/^    int _dsize;$/;"	m	struct:__anon7f973d070108	typeref:typename:int	file:
 _flags	acceleration/oclapi.c	/^    int _flags;$/;"	m	struct:__anon7f973d070108	typeref:typename:int	file:
 _host_data	acceleration/oclapi.c	/^    void *_host_data;$/;"	m	struct:__anon7f973d070108	typeref:typename:void *	file:
+_initialization_error	ml/ml.h	/^    MLErr _initialization_error;$/;"	m	struct:layer	typeref:typename:MLErr
 _islocal	acceleration/oclapi.c	/^    int _islocal;$/;"	m	struct:__anon7f973d070108	typeref:typename:int	file:
 _oclapi_Karg	acceleration/oclapi.c	/^} _oclapi_Karg;$/;"	t	typeref:struct:__anon7f973d070108	file:
 _oclapi_Klist	acceleration/oclapi.c	/^} _oclapi_Klist;$/;"	t	typeref:struct:_oclapi_klist	file:
@@ -319,7 +335,7 @@ acceleration/oclapi.o	build/Makefile	/^acceleration\/oclapi.o: acceleration\/ocl
 acceleration/oclapi.s	build/Makefile	/^acceleration\/oclapi.s: acceleration\/oclapi.c.s$/;"	t
 addlayer	ml/.src/mlsrc.c	/^void addlayer(Layer **machine, Layer **newl) {$/;"	f	typeref:typename:void
 all	build/Makefile	/^all: cmake_check_build_system$/;"	t
-aml	CMakeLists.txt	/^add_executable(aml main.c acceleration\/oclapi.c matrix\/mat.c ml\/layers.c ml\/machine.c)$/;"	t
+aml	CMakeLists.txt	/^add_executable(aml main.c acceleration\/oclapi.c matrix\/mat.c ml\/layers.c ml\/machine.c ml\/op/;"	t
 aml	CMakeLists.txt	/^project(aml)$/;"	p
 aml	build/Makefile	/^aml: cmake_check_build_system$/;"	t
 aml/fast	build/Makefile	/^aml\/fast:$/;"	t
@@ -339,6 +355,8 @@ claRegisterFromSrc	acceleration/oclapi.c	/^OCLAPIErr claRegisterFromSrc(const ch
 claRunKernel	acceleration/oclapi.c	/^OCLAPIErr claRunKernel(const char *name, int wdim, size_t *gsz, size_t *lsz, ...) {$/;"	f	typeref:typename:OCLAPIErr
 clean	build/Makefile	/^clean:$/;"	t
 clean/fast	build/Makefile	/^clean\/fast: clean$/;"	t
+cleanup	ml/ml.h	/^    MLErr (*cleanup)(struct layer *self);$/;"	m	struct:layer	typeref:typename:MLErr (*)(struct layer * self)
+cleanup	ml/ml.h	/^    MLErr (*cleanup)(struct learninginstance *self);$/;"	m	struct:learninginstance	typeref:typename:MLErr (*)(struct learninginstance * self)
 clerr	acceleration/oclapi.c	/^cl_int clerr = CL_SUCCESS;$/;"	v	typeref:typename:cl_int
 cmake_check_build_system	build/Makefile	/^cmake_check_build_system:$/;"	t
 cmake_force	build/Makefile	/^cmake_force:$/;"	t
@@ -347,44 +365,49 @@ command	build/compile_commands.json	/^  "command": "\/usr\/bin\/cc  -I\\"\/media
 command	build/compile_commands.json	/^  "command": "\/usr\/bin\/cc  -I\\"\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/build\\"  -g  /;"	s	object:2
 command	build/compile_commands.json	/^  "command": "\/usr\/bin\/cc  -I\\"\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/build\\"  -g  /;"	s	object:3
 command	build/compile_commands.json	/^  "command": "\/usr\/bin\/cc  -I\\"\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/build\\"  -g  /;"	s	object:4
+command	build/compile_commands.json	/^  "command": "\/usr\/bin\/cc  -I\\"\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/build\\"  -g  /;"	s	object:5
 const	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^# define const$/;"	d	file:
 context	acceleration/oclapi.c	/^cl_context context;$/;"	v	typeref:typename:cl_context
 conv2d	ml/.src/mlsrc.c	/^int conv2d(double *params, int paramsw, int unused0,$/;"	f	typeref:typename:int
 cpPlatform	acceleration/oclapi.c	/^cl_platform_id cpPlatform;$/;"	v	typeref:typename:cl_platform_id
 data	matrix/mat.h	/^    double *data;$/;"	m	struct:__anonde711da10108	typeref:typename:double *
 data	matrix/mat.h	/^    double *data;$/;"	m	struct:__anonde711da10208	typeref:typename:double *
-data	matrix/mat.h	/^    double *data;$/;"	m	struct:__anonde711da10308	typeref:typename:double *
 default_target	build/Makefile	/^default_target: all$/;"	t
 depend	build/Makefile	/^depend:$/;"	t
-depth	matrix/mat.h	/^    int depth;$/;"	m	struct:__anonde711da10208	typeref:typename:int
+derive	ml/ml.h	/^    MLErr (*derive)(struct layer *self, Tensor upstream_derivatives, Tensor activation, Tensor */;"	m	struct:layer	typeref:typename:MLErr (*)(struct layer * self,Tensor upstream_derivatives,Tensor activation,Tensor ** downstream_derivative,Tensor ** self_derivative)
 device_id	acceleration/oclapi.c	/^cl_device_id device_id;$/;"	v	typeref:typename:cl_device_id
-dimsz	matrix/mat.h	/^    int *dimsz;$/;"	m	struct:__anonde711da10308	typeref:typename:int *
+dimsz	matrix/mat.h	/^    int *dimsz;$/;"	m	struct:__anonde711da10208	typeref:typename:int *
 directory	build/compile_commands.json	/^  "directory": "\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/build",$/;"	s	object:0
 directory	build/compile_commands.json	/^  "directory": "\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/build",$/;"	s	object:1
 directory	build/compile_commands.json	/^  "directory": "\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/build",$/;"	s	object:2
 directory	build/compile_commands.json	/^  "directory": "\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/build",$/;"	s	object:3
 directory	build/compile_commands.json	/^  "directory": "\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/build",$/;"	s	object:4
+directory	build/compile_commands.json	/^  "directory": "\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/build",$/;"	s	object:5
 dropout	ml/.src/mlsrc.c	/^int dropout(double *prob, int unused0, int unused1,$/;"	f	typeref:typename:int
 edit_cache	build/Makefile	/^edit_cache:$/;"	t
 edit_cache/fast	build/Makefile	/^edit_cache\/fast: edit_cache$/;"	t
+error	ml/ml.h	/^    int error;$/;"	m	struct:layer	typeref:typename:int
+errorString	ml/ml.h	/^    const char* (*errorString)(int error);$/;"	m	struct:layer	typeref:typename:const char * (*)(int error)
 file	build/compile_commands.json	/^  "file": "\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/acceleration\/oclapi.c"$/;"	s	object:1
 file	build/compile_commands.json	/^  "file": "\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/main.c"$/;"	s	object:0
 file	build/compile_commands.json	/^  "file": "\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/matrix\/mat.c"$/;"	s	object:2
 file	build/compile_commands.json	/^  "file": "\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/ml\/layers.c"$/;"	s	object:3
 file	build/compile_commands.json	/^  "file": "\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/ml\/machine.c"$/;"	s	object:4
+file	build/compile_commands.json	/^  "file": "\/media\/nadav\/BDRIVE\/My Stuff\/C Code\/aml\/ml\/optimizer.c"$/;"	s	object:5
 filterh	ml/.src/mlsrc.c	/^        double filterh;$/;"	m	struct:conv2d::__anon683ecbe40108	typeref:typename:double	file:
 filtern	ml/.src/mlsrc.c	/^        double filtern;$/;"	m	struct:conv2d::__anon683ecbe40108	typeref:typename:double	file:
 filterw	ml/.src/mlsrc.c	/^        double filterw;$/;"	m	struct:conv2d::__anon683ecbe40108	typeref:typename:double	file:
-forawrd	ml/ml.h	/^    MLErr (*forawrd)(MatrixN parameters, MatrixN inp, MatrixN **out);$/;"	m	struct:layer	typeref:typename:MLErr (*)(MatrixN parameters,MatrixN inp,MatrixN ** out)
+forward	ml/ml.h	/^    MLErr (*forward)(struct layer *self, Tensor input, Tensor **output);$/;"	m	struct:layer	typeref:typename:MLErr (*)(struct layer * self,Tensor input,Tensor ** output)
 forwardpass	ml/.src/mlsrc.c	/^int forwardpass(Layer machine, Mat input, Mat **output) {$/;"	f	typeref:typename:int
+freeActivationsDerivatives	ml/optimizer.c	/^#define freeActivationsDerivatives /;"	d	file:
+freeLayer	ml/ml.h	/^static inline void freeLayer(Layer *l) {$/;"	f	typeref:typename:void
 freeMatrix2	matrix/mat.h	/^static inline void freeMatrix2(Matrix2 *m2) {$/;"	f	typeref:typename:void
-freeMatrixN	matrix/mat.h	/^static inline void freeMatrixN(MatrixN *mn) {$/;"	f	typeref:typename:void
+freeTensor	matrix/mat.h	/^static inline void freeTensor(Tensor *t) {$/;"	f	typeref:typename:void
+freeTensorD	matrix/mat.h	/^static inline void freeTensorD(Tensor t) {$/;"	f	typeref:typename:void
 fullyc	ml/.src/mlsrc.c	/^int fullyc(double *params, int paramsw, int unused0,$/;"	f	typeref:typename:int
-getDelta	ml/ml.h	/^    MLErr (*getDelta)(MatrixN parameters, double prev_delta, double *new_delta); $/;"	m	struct:layer	typeref:typename:MLErr (*)(MatrixN parameters,double prev_delta,double * new_delta)
 height	matrix/mat.h	/^    int height;$/;"	m	struct:__anonde711da10108	typeref:typename:int
-height	matrix/mat.h	/^    int height;$/;"	m	struct:__anonde711da10208	typeref:typename:int
 help	build/Makefile	/^help:$/;"	t
-hyper_parameters	ml/ml.h	/^    MatrixN hyper_parameters;$/;"	m	struct:__anonc9c8b63c0208	typeref:typename:MatrixN
+hyper_parameters	ml/ml.h	/^    void *hyper_parameters;$/;"	m	struct:learninginstance	typeref:typename:void *
 info_arch	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^char const* info_arch = "INFO" ":" "arch[" ARCHITECTURE_ID "]";$/;"	v	typeref:typename:char const *
 info_arch	build/CMakeFiles/3.16.3/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^char const* info_arch = "INFO" ":" "arch[" ARCHITECTURE_ID "]";$/;"	v	typeref:typename:char const *
 info_compiler	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^char const* info_compiler = "INFO" ":" "compiler[" COMPILER_ID "]";$/;"	v	typeref:typename:char const *
@@ -404,16 +427,21 @@ info_version	build/CMakeFiles/3.16.3/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^char
 info_version_internal	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^char const info_version_internal[] = {$/;"	v	typeref:typename:char const[]
 info_version_internal	build/CMakeFiles/3.16.3/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^char const info_version_internal[] = {$/;"	v	typeref:typename:char const[]
 inh	ml/.src/mlsrc.h	/^    int inh;$/;"	m	struct:Layer	typeref:typename:int
+initialize	ml/ml.h	/^    MLErr (*initialize)(struct layer *self);$/;"	m	struct:layer	typeref:typename:MLErr (*)(struct layer * self)
+initialize	ml/ml.h	/^    MLErr (*initialize)(struct learninginstance *self);$/;"	m	struct:learninginstance	typeref:typename:MLErr (*)(struct learninginstance * self)
+input_n	ml/ml.h	/^    int input_n;$/;"	m	struct:learninginstance	typeref:typename:int
+inputs	ml/ml.h	/^    Tensor *inputs;$/;"	m	struct:learninginstance	typeref:typename:Tensor *
 insz	ml/.src/mlsrc.c	/^        double insz;$/;"	m	struct:fullyc::__anon683ecbe40308	typeref:typename:double	file:
 inw	ml/.src/mlsrc.h	/^    int inw; $/;"	m	struct:Layer	typeref:typename:int
 isptr	acceleration/oclapi.c	/^    int isptr;$/;"	m	struct:__anon7f973d070108	typeref:typename:int	file:
 kernel	acceleration/oclapi.c	/^    cl_kernel kernel;$/;"	m	struct:_oclapi_klist	typeref:typename:cl_kernel	file:
 kernels	acceleration/oclapi.c	/^_oclapi_Klist *kernels = NULL;$/;"	v	typeref:typename:_oclapi_Klist *
 layer	ml/ml.h	/^typedef struct layer {$/;"	s
-layers	ml/ml.h	/^    Layer *layers;$/;"	m	struct:__anonc9c8b63c0208	typeref:typename:Layer *
+layer_count	ml/ml.h	/^    int layer_count;$/;"	m	struct:__anonc9c8b63c0208	typeref:typename:int
+layers	ml/ml.h	/^    Layer **layers;$/;"	m	struct:__anonc9c8b63c0208	typeref:typename:Layer **
 learn	ml/.src/mlsrc.h	/^    void (*learn)(Mat *, double *, int);$/;"	m	struct:Layer	typeref:typename:void (*)(Mat *,double *,int)
-learningAlgorithm	ml/ml.h	/^    MLErr (*learningAlgorithm)(MatrixN hyper_parameters, Layer *layers);$/;"	m	struct:__anonc9c8b63c0208	typeref:typename:MLErr (*)(MatrixN hyper_parameters,Layer * layers)
-literal_size	matrix/mat.h	/^    int literal_size;$/;"	m	struct:__anonde711da10308	typeref:typename:int
+learninginstance	ml/ml.h	/^typedef struct learninginstance {$/;"	s
+literal_size	matrix/mat.h	/^    int literal_size;$/;"	m	struct:__anonde711da10208	typeref:typename:int
 main	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^int main(argc, argv) int argc; char *argv[];$/;"	f
 main	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^void main() {}$/;"	f	typeref:typename:void
 main	build/CMakeFiles/3.16.3/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^int main(int argc, char* argv[])$/;"	f	typeref:typename:int
@@ -424,21 +452,29 @@ main.c.s	build/Makefile	/^main.c.s:$/;"	t
 main.i	build/Makefile	/^main.i: main.c.i$/;"	t
 main.o	build/Makefile	/^main.o: main.c.o$/;"	t
 main.s	build/Makefile	/^main.s: main.c.s$/;"	t
-makeMatrix2	matrix/mat.c	/^Matrix2* makeMatrix2(int width, int height) {$/;"	f	typeref:typename:Matrix2 *
-makeMatrixN	matrix/mat.c	/^MatrixN* makeMatrixN(int ndims, int *dims) {$/;"	f	typeref:typename:MatrixN *
-mat2AsMatrixN	matrix/mat.h	/^static inline MatrixN* mat2AsMatrixN(Matrix2 m) {$/;"	f	typeref:typename:MatrixN *
+mat2AsTensor	matrix/mat.h	/^static inline Tensor* mat2AsTensor(Matrix2 m) {$/;"	f	typeref:typename:Tensor *
 matAdd	matrix/mat.c	/^MatrixErr matAdd(Matrix2 m1, Matrix2 m2, Matrix2 **r) {$/;"	f	typeref:typename:MatrixErr
 matGetErrorString	matrix/mat.h	/^static const char* matGetErrorString(MatrixErr error) {$/;"	f	typeref:typename:const char *
 matGetExtendedError	matrix/mat.h	/^static inline cl_int matGetExtendedError() {$/;"	f	typeref:typename:cl_int
 matInit	matrix/mat.c	/^MatrixErr matInit() {$/;"	f	typeref:typename:MatrixErr
+matMakeMatrix2	matrix/mat.c	/^Matrix2* matMakeMatrix2(int width, int height) {$/;"	f	typeref:typename:Matrix2 *
+matMakeTensor	matrix/mat.c	/^Tensor* matMakeTensor(int ndims, int *dims) {$/;"	f	typeref:typename:Tensor *
 matMul	matrix/mat.c	/^MatrixErr matMul(Matrix2 m1, Matrix2 m2, Matrix2 **r) {$/;"	f	typeref:typename:MatrixErr
-matNAsMatrix2	matrix/mat.h	/^static inline Matrix2* matNAsMatrix2(MatrixN m, int width, int height) {$/;"	f	typeref:typename:Matrix2 *
-matNAtI	matrix/mat.c	/^double* matNAtI(MatrixN m, int *indecies) {$/;"	f	typeref:typename:double *
-matNContiguousCopy	matrix/mat.c	/^double* matNContiguousCopy(MatrixN m) {$/;"	f	typeref:typename:double *
-matNIAt	matrix/mat.c	/^int* matNIAt(MatrixN m, int literal) {$/;"	f	typeref:typename:int *
-matNPtrAsIndex	matrix/mat.h	/^static inline int matNPtrAsIndex(MatrixN m, double *ptr) {$/;"	f	typeref:typename:int
-matNSubMatrix2	matrix/mat.c	/^Matrix2* matNSubMatrix2(MatrixN m, int *start, int width, int height) {$/;"	f	typeref:typename:Matrix2 *
+matMulTS	matrix/mat.c	/^MatrixErr matMulTS(Tensor t, double s, Tensor **r) {$/;"	f	typeref:typename:MatrixErr
+matNAtI	matrix/mat.c	/^double* matNAtI(Tensor m, int *indecies) {$/;"	f	typeref:typename:double *
+matNIAt	matrix/mat.c	/^int* matNIAt(Tensor m, int literal) {$/;"	f	typeref:typename:int *
 matPrintMatrix2	matrix/mat.h	/^static inline void matPrintMatrix2(Matrix2 m) {$/;"	f	typeref:typename:void
+matPrintTensor	matrix/mat.h	/^static void matPrintTensor(Tensor m) {$/;"	f	typeref:typename:void
+matSub	matrix/mat.c	/^MatrixErr matSub(Matrix2 m1, Matrix2 m2, Matrix2 **r) {$/;"	f	typeref:typename:MatrixErr
+matSubTT	matrix/mat.c	/^MatrixErr matSubTT(Tensor t1, Tensor t2, Tensor **r) {$/;"	f	typeref:typename:MatrixErr
+matT2	matrix/mat.c	/^Matrix2* matT2(Matrix2 m) {$/;"	f	typeref:typename:Matrix2 *
+matTAsMatrix2	matrix/mat.h	/^static inline Matrix2* matTAsMatrix2(Tensor m, int width, int height) {$/;"	f	typeref:typename:Matrix2 *
+matTPtrAsIndex	matrix/mat.h	/^static inline int matTPtrAsIndex(Tensor m, double *ptr) {$/;"	f	typeref:typename:int
+matTTensor	matrix/mat.c	/^Tensor* matTTensor(Tensor m) {$/;"	f	typeref:typename:Tensor *
+matTensorContiguousCopy	matrix/mat.c	/^double* matTensorContiguousCopy(Tensor m) {$/;"	f	typeref:typename:double *
+matTensorFit	matrix/mat.h	/^static MatrixErr matTensorFit(Tensor t1, Tensor t2, Tensor **t1r, Tensor **t2r) {$/;"	f	typeref:typename:MatrixErr
+matTensorFit2	matrix/mat.h	/^static MatrixErr matTensorFit2(Tensor t1, Tensor t2, Tensor **t1r, Tensor **t2r) {$/;"	f	typeref:typename:MatrixErr
+matTensorSubMatrix2	matrix/mat.c	/^Matrix2* matTensorSubMatrix2(Tensor m, int *start, int width, int height) {$/;"	f	typeref:typename:Matrix2 *
 matinit	matrix/mat.c	/^bool matinit = false;$/;"	v	typeref:typename:bool
 matrix/mat.c.i	build/Makefile	/^matrix\/mat.c.i:$/;"	t
 matrix/mat.c.o	build/Makefile	/^matrix\/mat.c.o:$/;"	t
@@ -461,34 +497,57 @@ ml/machine.c.s	build/Makefile	/^ml\/machine.c.s:$/;"	t
 ml/machine.i	build/Makefile	/^ml\/machine.i: ml\/machine.c.i$/;"	t
 ml/machine.o	build/Makefile	/^ml\/machine.o: ml\/machine.c.o$/;"	t
 ml/machine.s	build/Makefile	/^ml\/machine.s: ml\/machine.c.s$/;"	t
-mlAddLayer	ml/machine.c	/^MLErr mlAddLayer(Machine *machine, Layer *layer) {$/;"	f	typeref:typename:MLErr
-mlFeedForward	ml/machine.c	/^MLErr mlFeedForward(Machine machine, MatrixN inp, MatrixN **out) {$/;"	f	typeref:typename:MLErr
-mlFullyConnectedLayerForward	ml/layers.c	/^MLErr mlFullyConnectedLayerForward(MatrixN parameters, MatrixN inp, MatrixN **out) {$/;"	f	typeref:typename:MLErr
-mlFullyConnectedLayerGetDelta	ml/layers.c	/^MLErr mlFullyConnectedLayerGetDelta(MatrixN parameters, double prev_delta, double *new_delta) {$/;"	f	typeref:typename:MLErr
+ml/optimizer.c.i	build/Makefile	/^ml\/optimizer.c.i:$/;"	t
+ml/optimizer.c.o	build/Makefile	/^ml\/optimizer.c.o:$/;"	t
+ml/optimizer.c.s	build/Makefile	/^ml\/optimizer.c.s:$/;"	t
+ml/optimizer.i	build/Makefile	/^ml\/optimizer.i: ml\/optimizer.c.i$/;"	t
+ml/optimizer.o	build/Makefile	/^ml\/optimizer.o: ml\/optimizer.c.o$/;"	t
+ml/optimizer.s	build/Makefile	/^ml\/optimizer.s: ml\/optimizer.c.s$/;"	t
+mlFullyConnectedCleanup	ml/layers.c	/^MLErr mlFullyConnectedCleanup(Layer *self) {$/;"	f	typeref:typename:MLErr
+mlFullyConnectedDerive	ml/layers.c	/^MLErr mlFullyConnectedDerive(Layer *self, Tensor upstream_derivatives, Tensor activation, Tensor/;"	f	typeref:typename:MLErr
+mlFullyConnectedErrorString	ml/layers.c	/^const char* mlFullyConnectedErrorString(int error) {$/;"	f	typeref:typename:const char *
+mlFullyConnectedForward	ml/layers.c	/^MLErr mlFullyConnectedForward(Layer *self, Tensor input, Tensor **output) {$/;"	f	typeref:typename:MLErr
+mlFullyConnectedInitialize	ml/layers.c	/^MLErr mlFullyConnectedInitialize(Layer *self) {$/;"	f	typeref:typename:MLErr
+mlFullyConnectedUpdate	ml/layers.c	/^MLErr mlFullyConnectedUpdate(Layer *self, Tensor self_derivative) {$/;"	f	typeref:typename:MLErr
 mlGetErrorString	ml/ml.h	/^static const char* mlGetErrorString(MLErr error) {$/;"	f	typeref:typename:const char *
-mlMakeLayer	ml/layers.c	/^Layer* mlMakeLayer(MatrixN parameters, $/;"	f	typeref:typename:Layer *
+mlMachineFeedForward	ml/machine.c	/^MLErr mlMachineFeedForward(Machine machine, Tensor *input, Tensor **output) {$/;"	f	typeref:typename:MLErr
+mlMakeLayer	ml/ml.h	/^#define mlMakeLayer(/;"	d
+mlMakeLayerExplicit	ml/ml.h	/^static Layer* mlMakeLayerExplicit(MLErr (*forward)(struct layer *self, Tensor input, Tensor **ou/;"	f	typeref:typename:Layer *
+mlMakeLearningInstance	ml/ml.h	/^#define mlMakeLearningInstance(/;"	d
+mlMakeLearningInstanceExplicit	ml/ml.h	/^static LearningInstance* mlMakeLearningInstanceExplicit(Machine machine, void *hyper_parameters,/;"	f	typeref:typename:LearningInstance *
+mlMakeMachine	ml/ml.h	/^static Machine mlMakeMachine(int layer_count, Layer **layers) {$/;"	f	typeref:typename:Machine
+mlMeanSquaredErrorCleanup	ml/layers.c	/^MLErr mlMeanSquaredErrorCleanup(Layer *self) {$/;"	f	typeref:typename:MLErr
+mlMeanSquaredErrorDerive	ml/layers.c	/^MLErr mlMeanSquaredErrorDerive(Layer *self, Tensor upstream_derivatives, Tensor activation, Tens/;"	f	typeref:typename:MLErr
+mlMeanSquaredErrorErrorString	ml/layers.c	/^const char* mlMeanSquaredErrorErrorString(int error) {$/;"	f	typeref:typename:const char *
+mlMeanSquaredErrorForward	ml/layers.c	/^MLErr mlMeanSquaredErrorForward(Layer *self, Tensor input, Tensor **output) {$/;"	f	typeref:typename:MLErr
+mlMeanSquaredErrorInitialize	ml/layers.c	/^MLErr mlMeanSquaredErrorInitialize(Layer *self) {$/;"	f	typeref:typename:MLErr
+mlMeanSquaredErrorUpdate	ml/layers.c	/^MLErr mlMeanSquaredErrorUpdate(Layer *self, Tensor self_derivative) {$/;"	f	typeref:typename:MLErr
+mlSGD	ml/optimizer.c	/^MLErr mlSGD(LearningInstance *self, Tensor *activations, Tensor *derivatives) {$/;"	f	typeref:typename:MLErr
+mlSGDCleanup	ml/optimizer.c	/^MLErr mlSGDCleanup(LearningInstance *self) {$/;"	f	typeref:typename:MLErr
+mlSGDInitialize	ml/optimizer.c	/^MLErr mlSGDInitialize(LearningInstance *self) {$/;"	f	typeref:typename:MLErr
+mlTrainInstance	ml/optimizer.c	/^MLErr mlTrainInstance(LearningInstance *instance) {$/;"	f	typeref:typename:MLErr
+mlWeightInitializer	ml/machine.c	/^Tensor* mlWeightInitializer(MLWeightInitializerType initializer, int ndims, int *dims) {$/;"	f	typeref:typename:Tensor *
 mlinit	ml/.src/mlsrc.c	/^int mlinit() {$/;"	f	typeref:typename:int
 mlinited	ml/.src/mlsrc.c	/^bool mlinited = false;$/;"	v	typeref:typename:bool
 name	acceleration/oclapi.c	/^    char *name;$/;"	m	struct:_oclapi_klist	typeref:typename:char *	file:
-ndims	matrix/mat.h	/^    int ndims;$/;"	m	struct:__anonde711da10308	typeref:typename:int
+ndims	matrix/mat.h	/^    int ndims;$/;"	m	struct:__anonde711da10208	typeref:typename:int
 next	acceleration/oclapi.c	/^    struct _oclapi_klist *next;$/;"	m	struct:_oclapi_klist	typeref:struct:_oclapi_klist *	file:
 next	ml/.src/mlsrc.h	/^    struct Layer *next;$/;"	m	struct:Layer	typeref:struct:Layer *
-next	ml/ml.h	/^    struct layer *next;$/;"	m	struct:layer	typeref:struct:layer *
 oclerr	acceleration/oclapi.c	/^OCLAPIErr oclerr = OCL_NO_ERR;$/;"	v	typeref:typename:OCLAPIErr
 oclinit	acceleration/oclapi.c	/^bool oclinit = false;$/;"	v	typeref:typename:bool
-offset	matrix/mat.h	/^    int offset;$/;"	m	struct:__anonde711da10308	typeref:typename:int
+offset	matrix/mat.h	/^    int offset;$/;"	m	struct:__anonde711da10208	typeref:typename:int
 offset	ml/.src/mlsrc.c	/^        double offset;$/;"	m	struct:bnorm::__anon683ecbe40408	typeref:typename:double	file:
+optimizer	ml/ml.h	/^    MLErr (*optimizer)(struct learninginstance *self, Tensor *activations, Tensor *derivatives);$/;"	m	struct:learninginstance	typeref:typename:MLErr (*)(struct learninginstance * self,Tensor * activations,Tensor * derivatives)
 outsz	ml/.src/mlsrc.c	/^        double outsz;$/;"	m	struct:fullyc::__anon683ecbe40308	typeref:typename:double	file:
 pad	ml/.src/mlsrc.c	/^        double pad;$/;"	m	struct:conv2d::__anon683ecbe40108	typeref:typename:double	file:
 pad	ml/.src/mlsrc.c	/^        double pad;$/;"	m	struct:maxpool::__anon683ecbe40208	typeref:typename:double	file:
-parameters	ml/ml.h	/^    MatrixN parameters;$/;"	m	struct:layer	typeref:typename:MatrixN
+parameters	ml/ml.h	/^    void *parameters;$/;"	m	struct:layer	typeref:typename:void *
 params	ml/.src/mlsrc.h	/^    Mat params;$/;"	m	struct:Layer	typeref:typename:Mat
 poolh	ml/.src/mlsrc.c	/^        double poolh;$/;"	m	struct:maxpool::__anon683ecbe40208	typeref:typename:double	file:
 poolw	ml/.src/mlsrc.c	/^        double poolw;$/;"	m	struct:maxpool::__anon683ecbe40208	typeref:typename:double	file:
 preinstall	build/Makefile	/^preinstall: all$/;"	t
 preinstall/fast	build/Makefile	/^preinstall\/fast:$/;"	t
 prev	ml/.src/mlsrc.h	/^    struct Layer *prev;$/;"	m	struct:Layer	typeref:struct:Layer *
-prev	ml/ml.h	/^    struct layer *prev;$/;"	m	struct:layer	typeref:struct:layer *
 qnxnto	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^char const* qnxnto = "INFO" ":" "qnxnto[]";$/;"	v	typeref:typename:char const *
 qnxnto	build/CMakeFiles/3.16.3/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^char const* qnxnto = "INFO" ":" "qnxnto[]";$/;"	v	typeref:typename:char const *
 queue	acceleration/oclapi.c	/^cl_command_queue queue;$/;"	v	typeref:typename:cl_command_queue
@@ -498,14 +557,17 @@ relu	ml/.src/mlsrc.c	/^int relu(double *unused0, int unused1, int unused2,$/;"	f
 rettype	acceleration/oclapi.c	/^    char rettype[RETTYPE_SIZE];$/;"	m	struct:__anon7f973d070108	typeref:typename:char[]	file:
 scale	ml/.src/mlsrc.c	/^        double scale;$/;"	m	struct:bnorm::__anon683ecbe40408	typeref:typename:double	file:
 softmax	ml/.src/mlsrc.c	/^int softmax(double *unused0, int unused1, int unused2,$/;"	f	typeref:typename:int
-stride	matrix/mat.h	/^    int *stride;$/;"	m	struct:__anonde711da10308	typeref:typename:int *
+src_machine	ml/ml.h	/^    Machine src_machine;$/;"	m	struct:learninginstance	typeref:typename:Machine
+stride	matrix/mat.h	/^    int *stride;$/;"	m	struct:__anonde711da10208	typeref:typename:int *
 strideh	ml/.src/mlsrc.c	/^        double strideh;$/;"	m	struct:conv2d::__anon683ecbe40108	typeref:typename:double	file:
 strideh	ml/.src/mlsrc.c	/^        double strideh;$/;"	m	struct:maxpool::__anon683ecbe40208	typeref:typename:double	file:
 stridew	ml/.src/mlsrc.c	/^        double stridew;$/;"	m	struct:conv2d::__anon683ecbe40108	typeref:typename:double	file:
 stridew	ml/.src/mlsrc.c	/^        double stridew;$/;"	m	struct:maxpool::__anon683ecbe40208	typeref:typename:double	file:
+target_outputs	ml/ml.h	/^    Tensor *target_outputs;$/;"	m	struct:learninginstance	typeref:typename:Tensor *
 transform	ml/.src/mlsrc.h	/^    int (*transform)(double *, int, int, double *, int, int, Mat **);$/;"	m	struct:Layer	typeref:typename:int (*)(double *,int,int,double *,int,int,Mat **)
+update	ml/ml.h	/^    MLErr (*update)(struct layer *self, Tensor self_derivative);$/;"	m	struct:layer	typeref:typename:MLErr (*)(struct layer * self,Tensor self_derivative)
 variance	ml/.src/mlsrc.c	/^        double variance;$/;"	m	struct:bnorm::__anon683ecbe40408	typeref:typename:double	file:
 volatile	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^# define volatile$/;"	d	file:
+weights	ml/ml.h	/^    void *weights;$/;"	m	struct:layer	typeref:typename:void *
 width	matrix/mat.h	/^    int width;$/;"	m	struct:__anonde711da10108	typeref:typename:int
-width	matrix/mat.h	/^    int width;$/;"	m	struct:__anonde711da10208	typeref:typename:int
 zcenter	ml/.src/mlsrc.c	/^int zcenter(double *params, int paramsw, int unused0,$/;"	f	typeref:typename:int

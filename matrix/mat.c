@@ -2,6 +2,7 @@
 #include "../acceleration/oclapi.h"
 #include <acceleration/kernels/static_kernels_src.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 bool matinit = false;
 
@@ -11,7 +12,7 @@ MatrixErr matInit() {
     // Source code defined in "acceleration/kernels/static_kernels_src.h"
     const char *src_kernel = KERNEL_STATIC_SOURCE_MAT_CL;
     
-    claRegisterFromSrc(&src_kernel, 5, "matmul", "matadd", "matsub", "matmuls", "matadds");
+    claRegisterFromSrc(&src_kernel, 6, "matmul", "matadd", "matsub", "matt", "matmuls", "matadds");
     if (claGetError()) return MAT_INITIALIZATION_FAILED;
     
     matinit = true;
@@ -29,7 +30,7 @@ MatrixErr matInit() {
  * `height` - height of the matrix.
  * returns pointer to generated matrix, or NULL.
  * */
-Matrix2* makeMatrix2(int width, int height) {
+Matrix2* matMakeMatrix2(int width, int height) {
     if (width <= 0 || height <= 0) return NULL;
 
     Matrix2 *m2 = (Matrix2 *) malloc(sizeof(Matrix2));
@@ -53,10 +54,11 @@ Matrix2* makeMatrix2(int width, int height) {
  * `dims` - dimension size.
  * returns pointer to generated matrix, or NULL.
  * */
-MatrixN* makeMatrixN(int ndims, int *dims) {
+Tensor* matMakeTensor(int ndims, int *dims) {
     if (ndims <= 0) return NULL;
+    for (int i = 0; i < ndims; i++) if (dims[i] < 1) return NULL;
 
-    MatrixN *mn = (MatrixN *) malloc(sizeof(MatrixN));
+    Tensor *mn = (Tensor *) malloc(sizeof(Tensor));
     
     mn->ndims = ndims;
     mn->dimsz = (int *) malloc(sizeof(int) * ndims);
@@ -88,7 +90,7 @@ MatrixN* makeMatrixN(int ndims, int *dims) {
  * `indecies` - indecies to target value.
  * returns a refrence to the value at indecies given.
  * */
-double* matNAtI(MatrixN m, int *indecies) {
+double* matNAtI(Tensor m, int *indecies) {
     if (indecies == NULL) return NULL;
 
     int literal_index = 0;
@@ -109,7 +111,7 @@ double* matNAtI(MatrixN m, int *indecies) {
  * `literal` - literal index to data. This does include offset.
  * returns array of indecies describing the location in the matrix, or NULL.
  * */
-int* matNIAt(MatrixN m, int literal) {
+int* matNIAt(Tensor m, int literal) {
     // Index out of matrix bounds
     if (literal > m.literal_size) return NULL;
 
@@ -137,8 +139,8 @@ int* matNIAt(MatrixN m, int literal) {
  * `height` - height of refsulting matrix.
  * returns sub matrix, or NULL if invalid parameters.
  * */
-Matrix2* matNSubMatrix2(MatrixN m, int *start, int width, int height) {
-    int effective_start = matNPtrAsIndex(m, matNAtI(m, start));
+Matrix2* matTensorSubMatrix2(Tensor m, int *start, int width, int height) {
+    int effective_start = matTPtrAsIndex(m, matNAtI(m, start));
     
     // If starting index is not in bounds, or otherwise invalid
     // by beign NULL, return NULL.
@@ -147,7 +149,7 @@ Matrix2* matNSubMatrix2(MatrixN m, int *start, int width, int height) {
     // if out of bounds.
     if (effective_start + width * height > m.literal_size) return NULL;
 
-    Matrix2 *r = makeMatrix2(width, height);
+    Matrix2 *r = matMakeMatrix2(width, height);
     r->data = (double *) malloc(sizeof(double) * width * height);
 
     for (int i = 0; i < width * height; i++) {
@@ -169,7 +171,7 @@ Matrix2* matNSubMatrix2(MatrixN m, int *start, int width, int height) {
  * `m` - input matrix.
  * returns array of matrix data.
  * */
-double* matNContiguousCopy(MatrixN m) {
+double* matTensorContiguousCopy(Tensor m) {
     double *r = (double *) malloc(sizeof(double) * m.literal_size);
 
     // Make deep copy linearly.
@@ -190,7 +192,7 @@ MatrixErr matMul(Matrix2 m1, Matrix2 m2, Matrix2 **r) {
     if (m1.width != m2.height) return MAT_DIMENSION_MISTMATCH;
     
     // Standard kernel call in OCLAPI.
-    *r = makeMatrix2(m2.width, m1.height);
+    *r = matMakeMatrix2(m2.width, m1.height);
     Matrix2 *res = *r;
     res->data = (double *) malloc(sizeof(double) * res->width * res->height);
 
@@ -213,7 +215,7 @@ MatrixErr matAdd(Matrix2 m1, Matrix2 m2, Matrix2 **r) {
     if (m1.width != m2.width || m1.height != m2.height) return MAT_DIMENSION_MISTMATCH;
     
     // Standard kernel call in OCLAPI.
-    *r = makeMatrix2(m1.width, m1.height);
+    *r = matMakeMatrix2(m1.width, m1.height);
     Matrix2 *res = *r;
     res->data = (double *) malloc(sizeof(double) * res->width * res->height);
 
@@ -224,6 +226,116 @@ MatrixErr matAdd(Matrix2 m1, Matrix2 m2, Matrix2 **r) {
                  m1.width, m1.height,
                  res->data, res->width * res->height, OCLWRITE | OCLOUT);
     if (claGetError()) return MAT_KERNEL_FAILURE;
+
+    return MAT_NO_ERROR;
+}
+
+MatrixErr matSub(Matrix2 m1, Matrix2 m2, Matrix2 **r) {
+    // Error checking.
+    if (r == NULL) return MAT_NULL_PTR;
+    *r = NULL;
+    if (!matinit) return MAT_UNINITIALIZED;
+    if (m1.width != m2.width || m1.height != m2.height) return MAT_DIMENSION_MISTMATCH;
+
+    // Standard kernel call in OCLAPI.
+    *r = matMakeMatrix2(m1.width, m1.height);
+    Matrix2 *res = *r;
+    res->data = (double *) malloc(sizeof(double) * res->width * res->height);
+
+    size_t gz[] = { res->width, res->height };
+    claRunKernel("matsub", 2, gz, NULL, 
+                 m1.data, m1.width * m1.height, OCLREAD | OCLCPY,
+                 m2.data, m2.width * m2.height, OCLREAD | OCLCPY,
+                 m1.width, m1.height,
+                 res->data, res->width * res->height, OCLWRITE | OCLOUT);
+    if (claGetError()) return MAT_KERNEL_FAILURE;
+
+    return MAT_NO_ERROR;
+}
+
+Matrix2* matT2(Matrix2 m) {
+    // Error checking.
+    if (!matinit) return NULL;
+
+    // Standard kernel call in OCLAPI.
+    Matrix2 *res = matMakeMatrix2(m.height, m.width);
+    res->data = (double *) malloc(sizeof(double) * res->width * res->height);
+
+    size_t gz[] = { res->height, res->width };
+    claRunKernel("matt", 2, gz, NULL,
+                 m.data, m.width * m.height, OCLREAD | OCLCPY,
+                 m.width, m.height,
+                 res->data, res->width * res->height, OCLWRITE | OCLOUT);
+    if (claGetError()) return NULL;
+    
+    return res;
+}
+
+// PERF: Write this using GPU acceleration. This would either require using `matT2`,
+// PERF: or, implement `matlib.h` and use `MatrixN` `matNAtI`.
+Tensor* matTTensor(Tensor m) {
+    // Error checking.
+    if (!matinit) return NULL;
+
+    // Shift dimensions forward.
+    int *dims = (int *) malloc(sizeof(int) * m.ndims);
+    dims[0] = m.dimsz[m.ndims - 1];
+    for (int i = 1; i < m.ndims; i++) dims[i] = m.dimsz[i - 1];
+
+    Tensor *res = matMakeTensor(m.ndims, dims);
+    res->data = (double *) malloc(sizeof(double) * res->literal_size);
+    free(dims);
+
+    for (int i = 0; i < res->literal_size; i++) {
+        int *r_ind = matNIAt(*res, i);
+
+        int *m_ind = (int *) malloc(sizeof(int) * m.ndims);
+        for (int j = 0; j < m.ndims - 1; j++) m_ind[j] = r_ind[j + 1];
+        m_ind[m.ndims - 1] = r_ind[0];
+
+        *matNAtI(*res, r_ind) = *matNAtI(m, m_ind);
+
+        free(r_ind);
+        free(m_ind);
+    }
+
+    return res;
+}
+
+// PERF: Write this using GPU acceleration.
+MatrixErr matMulTS(Tensor t, double s, Tensor **r) {
+    if (r == NULL) return MAT_NULL_PTR;
+
+    Tensor *res;
+    res = matMakeTensor(t.ndims, t.dimsz);
+    res->data = (double *) malloc(sizeof(double) * res->literal_size);
+
+    for (int i = 0; i < t.literal_size; i++) {
+        int *ind = matNIAt(t, i);
+        double r = *matNAtI(t, ind) * s;
+        *matNAtI(*res, ind) = r;
+
+        free(ind);
+    }
+
+    *r = res;
+
+    return MAT_NO_ERROR;
+}
+
+// PERF: Write this using GPU acceleration.
+MatrixErr matSubTT(Tensor t1, Tensor t2, Tensor **r) {
+    if (r == NULL) return MAT_NULL_PTR;
+    if (t1.ndims != t2.ndims) return MAT_DIMENSION_MISTMATCH;
+    for (int i = 0; i < t1.ndims; i++) if (t1.dimsz[i] != t2.dimsz[i]) return MAT_DIMENSION_MISTMATCH;
+
+    Tensor *res;
+    res = matMakeTensor(t1.ndims, t1.dimsz);
+    res->data = (double *) malloc(sizeof(double) * res->literal_size);
+
+    for (int i = 0; i < res->literal_size; i++) res->data[i] = t1.data[i] - t2.data[i];
+
+    *r = res;
 
     return MAT_NO_ERROR;
 }

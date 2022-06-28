@@ -1,6 +1,7 @@
-// TODO: Kernels should use stride instead of width for indexing.
+// TODO: Kernels should use stride instead of width for indexing. Can be done in include.
 #include <opencl-c-base.h>
-#include "../include/matutil.h"
+#include <opencl-c.h>
+//#include "../include/matutil.h"
 
 void sumArray(__local double **tmp, int bsize, int li);
 
@@ -50,6 +51,13 @@ __kernel void matsub(__global double *a, __global double *b, unsigned int w, uns
     int gh = get_global_id(1);
 
     res[gw + gh * w] = a[gw + gh * w] - b[gw + gh * w];
+}
+
+__kernel void matt(__global double *a, unsigned int w, unsigned int h, __global double *res) {
+    int gw = get_global_id(0);
+    int gh = get_global_id(1);
+
+    res[gh + gw * h] = a[gw + gh * w];
 }
 
 __kernel void matdot(__global double *a, __global double *b, unsigned int w, unsigned int h, __local double *sum_ar, __global double *res) {

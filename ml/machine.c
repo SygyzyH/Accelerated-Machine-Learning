@@ -1,43 +1,32 @@
 #include "ml.h"
 #include "../matrix/mat.h"
 
-MLErr mlFeedForward(Machine machine, MatrixN inp, MatrixN **out) {
-    if (out == NULL) return ML_NULL_PTR;
+MLErr mlMachineFeedForward(Machine machine, Tensor *input, Tensor **output) {
+    if (output == NULL) return ML_NULL_PTR;
+    *output = NULL;
 
-    Layer *l = machine.layers;
-    MatrixN *rolling_output = NULL;
-    MatrixN *last_output = &inp;
+    Tensor *current_inp = input;
+    Tensor *current_output = NULL;
 
-    while (l != NULL) {
-        // Input of the next layer is the output of this layer.
-        MLErr e = l->forawrd(l->parameters, *last_output, &rolling_output);
-        if (last_output != &inp) freeMatrixN(last_output);
-        last_output = rolling_output;
-        
-        // Propegate error.
-        if (e != ML_NO_ERR) return e;
+    for (int layeri = 0; layeri < machine.layer_count; layeri++) {
+        MLErr error = machine.layers[layeri]->forward(machine.layers[layeri], *current_inp, &current_output);
+        if (current_inp != input) freeTensor(current_inp);
+        if (error != ML_NO_ERR) {
+            freeTensor(current_output);
+            current_output = NULL;
+            return error;
+        }
 
-        l = l->next;
+        current_inp = current_output;
     }
-    
-    *out = rolling_output;
+
+    *output = current_output;
 
     return ML_NO_ERR;
 }
 
-MLErr mlAddLayer(Machine *machine, Layer *layer) {
-    // If there's no first layer yet, set this layer as the first.
-    if (machine->layers == NULL) {
-        machine->layers = layer;
-        return ML_NO_ERR;
-    }
-
-    Layer *current_layer = machine->layers;
-    // Get to the end of the layer linked list.
-    while (current_layer->next != NULL) current_layer = current_layer->next;
-    // Link the new layer in.
-    current_layer->next = layer;
-    layer->prev = current_layer;
-
-    return ML_NO_ERR;
+// TODO: Is this function usefull? Shouldn't each layer implement its weight initializer?
+// Or maybe this function is usefull to be used inside the implementation?
+Tensor* mlWeightInitializer(MLWeightInitializerType initializer, int ndims, int *dims) {
+    return NULL;
 }

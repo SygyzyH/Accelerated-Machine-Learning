@@ -96,18 +96,20 @@ OCLAPIErr claInit() {
     queue = clCreateCommandQueue(context, device_id, 0, &err);
     if (err) goto ExitErrorCL;
     
-    puts("Initialized OpenCL API successfuly.");
+    fputs("Initialized OpenCL API successfuly.\n", stderr);
     
     oclinit = true;
     
     return OCL_NO_ERR;
     
     ExitErrorOCL:
+    fputs("OpenCL API initialization failed due to an API error.\n", stderr);
     oclerr = err;
     
     return oclerr;
     
     ExitErrorCL:
+    fputs("OpenCL API initialization failed due to an internal OpenCL failure.\n", stderr);
     oclerr = OCL_INTERNAL_OPENCL_ERROR;
     clerr = err;
     
@@ -166,7 +168,7 @@ OCLAPIErr claRegisterFromSrc(const char **src, int kerneln, ...) {
     // Build with kernel arg info flag to retrive it later. This solution thankfully
     // allows for building programs and having access to some of the information form
     // the compilation process, allowing for this whole library to feasably exist.
-    err = clBuildProgram(prog, 0, NULL, "-cl-kernel-arg-info -I acceleration/kernels/include", NULL, NULL);
+    err = clBuildProgram(prog, 0, NULL, "-cl-kernel-arg-info -I acceleration/kernels/src", NULL, NULL);
     if (err == CL_BUILD_PROGRAM_FAILURE) {
         char buildlog[BUILD_LOG_SIZE];
         clGetProgramBuildInfo(prog, device_id, CL_PROGRAM_BUILD_LOG, (size_t) BUILD_LOG_SIZE, buildlog, NULL);
