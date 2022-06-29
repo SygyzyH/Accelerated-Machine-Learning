@@ -101,11 +101,11 @@ MLErr mlTrainInstance(LearningInstance *instance) {
 
 MLErr mlSGD(LearningInstance *self, Tensor *activations, Tensor *derivatives) {
     // Multiply each derivative by the loss
-    double learning_rate = *(double *) self->hyper_parameters;
+    Tensor *learning_rate = matMakeTScalar(*(double *) self->hyper_parameters);
     Tensor *new_derivs = (Tensor *) malloc(sizeof(Tensor) * self->src_machine.layer_count);
     for (int i = 0; i < self->src_machine.layer_count; i++) {
         Tensor *new_deriv;
-        matMulTS(derivatives[i], learning_rate, &new_deriv);
+        matDot(derivatives[i], *learning_rate, &new_deriv);
         new_derivs[i] = *new_deriv;
     }
 
@@ -113,7 +113,7 @@ MLErr mlSGD(LearningInstance *self, Tensor *activations, Tensor *derivatives) {
     // Update each layer with its derivative
     for (int i = 0; i < self->src_machine.layer_count; i++)  {
         error = self->src_machine.layers[i]->update(self->src_machine.layers[i], new_derivs[i]);
-        if (error != ML_NO_ERR) goto Exit;
+        if (error != ML_NO_ERR) {puts("errr"); goto Exit;}
     }
 
 Exit:

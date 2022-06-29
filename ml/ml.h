@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 typedef enum {
-    ML_NO_ERR,
+    ML_NO_ERR=0,
     ML_LAYER_INVALID_PARAMETERS,
     ML_LAYER_INVALID_WEIGHTS,
     ML_LAYER_INVALID_INPUT_DIMS,

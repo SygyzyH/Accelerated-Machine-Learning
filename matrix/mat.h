@@ -38,18 +38,20 @@ typedef struct {
 } Tensor;
 
 typedef enum {
-    MAT_NO_ERROR,
+    MAT_NO_ERROR=0,
     MAT_INITIALIZATION_FAILED,
     MAT_UNINITIALIZED,
     MAT_DIMENSION_MISTMATCH,
     MAT_DIMENSION_OUT_OF_RANGE,
     MAT_KERNEL_FAILURE,
+    MAT_UNFIT_TENSORS,
     MAT_NULL_PTR
 } MatrixErr;
 
 MatrixErr matInit();
 Matrix2* matMakeMatrix2(int width, int height);
 Tensor* matMakeTensor(int ndims, int *dims);
+Tensor* matMakeTScalar(double s);
 double* matNAtI(Tensor m, int *indecies);
 int* matNIAt(Tensor m, int literal);
 Matrix2* matTensorSubMatrix2(Tensor m, int *start, int width, int height);
@@ -58,8 +60,8 @@ MatrixErr matTensorExtendDim(Tensor t, int dim, int rep, Tensor **r);
 MatrixErr matSub(Matrix2 m1, Matrix2 m2, Matrix2 **r);
 MatrixErr matAdd(Matrix2 m1, Matrix2 m2, Matrix2 **r);
 MatrixErr matMul(Matrix2 m1, Matrix2 m2, Matrix2 **r);
-MatrixErr matMulTS(Tensor t, double s, Tensor **r);
-MatrixErr matSubTT(Tensor t1, Tensor t2, Tensor **r);
+MatrixErr matDot(Tensor t1, Tensor t2, Tensor **r);
+MatrixErr matSubT(Tensor t1, Tensor t2, Tensor **r);
 Matrix2* matT2(Matrix2 m);
 Tensor* matTTensor(Tensor m);
 
@@ -71,6 +73,7 @@ static const char* matGetErrorString(MatrixErr error) {
         case MAT_DIMENSION_MISTMATCH: return "MAT_DIMENSION_MISTMATCH";
         case MAT_DIMENSION_OUT_OF_RANGE: return "MAT_DIMENSION_OUT_OF_RANGE";
         case MAT_KERNEL_FAILURE: return "MAT_KERNEL_FAILURE";
+        case MAT_UNFIT_TENSORS: return "MAT_UNFIT_TENSORS";
         case MAT_NULL_PTR: return "MAT_NULL_PTR";
         default: return "Unknown Matrix error";
     }
@@ -82,6 +85,37 @@ static const char* matGetErrorString(MatrixErr error) {
  * */
 static inline cl_int matGetExtendedError() {
     return claGetExtendedError();
+}
+
+static inline void freeMatrix2(Matrix2 *m2) {
+    if (m2 != NULL) {
+        free(m2->data);
+        m2->data = NULL;
+    }
+    free(m2);
+}
+
+static inline void freeTensor(Tensor *t) {
+    if (t != NULL) {
+        free(t->data);
+        t->data = NULL;
+        free(t->dimsz);
+        t->dimsz = NULL;
+        free(t->stride);
+        t->stride = NULL;
+    }
+    free(t);
+}
+
+// NOTE: Shouldn't this be the standard?
+// Destructor frees the internal logic, user is responsible for freeing the containing structure.
+static inline void freeTensorD(Tensor t) {
+    free(t.data);
+    t.data = NULL;
+    free(t.dimsz);
+    t.dimsz = NULL;
+    free(t.stride);
+    t.stride = NULL;
 }
 
 // Returns ptr to value in matrix as a literal index.
@@ -197,15 +231,28 @@ static void matPrintTensor(Tensor m) {
     printf("%d\n", m.dimsz[m.ndims - 1]);
 }
 
-static MatrixErr matTensorFit2(Tensor t1, Tensor t2, Tensor **t1r, Tensor **t2r) {
-    if (t1r == NULL) return MAT_NULL_PTR;
-    *t1r = NULL;
-    if (t2r == NULL) return MAT_NULL_PTR;
-    *t2r = NULL;
+static inline int matTensorIsScalar(Tensor t) {
+    for (int i = 0; i < t.ndims; i++) if (t.dimsz[i] != 1) return 0;
+    return 1;
+}
 
-    // matTensorExtendDim(Tensor t, int dim, int rep, Tensor **r);
+static inline Tensor* matTensorReduce(Tensor t) {
+    int reduce_dims = 0;
+    for (int i = 0; i < t.ndims; i++) if (t.dimsz[i] == 1) reduce_dims++;
+    int new_ndims = t.ndims - reduce_dims;
+    // Reducing scalar
+    if (new_ndims < 1) new_ndims = 1;
 
-    return MAT_NO_ERROR;
+    int *new_dims = (int *) malloc(sizeof(int) * new_ndims);
+    int i_dim = 0;
+    for (int i = 0; i < t.ndims; i++) if (t.dimsz[i] != 1) new_dims[i_dim++] = t.dimsz[i];
+    // Reducing scalar
+    if (t.ndims - reduce_dims < 1) new_dims[0] = 1;
+
+    Tensor *r = matMakeTensor(new_ndims, new_dims);
+    r->data = matTensorContiguousCopy(t);
+
+    return r;
 }
 
 static MatrixErr matTensorFit(Tensor t1, Tensor t2, Tensor **t1r, Tensor **t2r) {
@@ -214,85 +261,70 @@ static MatrixErr matTensorFit(Tensor t1, Tensor t2, Tensor **t1r, Tensor **t2r) 
     if (t2r == NULL) return MAT_NULL_PTR;
     *t2r = NULL;
 
+    // MatrixErr matTensorExtendDim(Tensor t, int dim, int rep, Tensor **r);
+    // First, reduce dimensions
+    Tensor *new_t1 = matTensorReduce(t1);
+    Tensor *new_t2 = matTensorReduce(t2);
+    t1 = *new_t1;
+    t2 = *new_t2;
+
+    // Biggest dimension out of the two is the target dimension
     Tensor biggest = (t1.ndims > t2.ndims)? t1 : t2;
-    Tensor smallest = (t1.ndims <= t2.ndims)? t1 : t2;
+    int *t1_ones_appended = (int *) malloc(sizeof(int) * biggest.ndims);
+    int *t2_ones_appended = (int *) malloc(sizeof(int) * biggest.ndims);
 
-    // First, check if they fit
-    for (int dim = 0; dim < biggest.ndims; dim++) 
-        if (dim < smallest.ndims) 
-            if (biggest.dimsz[dim] != smallest.dimsz[dim] && (biggest.dimsz[dim] != 1 || smallest.dimsz[dim] != 1)) 
-                return MAT_DIMENSION_MISTMATCH;
-
-
-
-    // Make the copies with the new dimensions
-    Tensor *r_t1;
-    int *r_t1_dims = (int *) malloc(sizeof(int) * biggest.ndims);
     for (int i = 0; i < biggest.ndims; i++) {
-        if (i >= t1.ndims || t1.dimsz[i] == 1) r_t1_dims[i] = t2.dimsz[i];
-        else if (i < t1.ndims) r_t1_dims[i] = t1.dimsz[i];
+        if (i < t1.ndims) t1_ones_appended[i] = t1.dimsz[i];
+        else t1_ones_appended[i] = 1;
     }
-    r_t1 = matMakeTensor(biggest.ndims, r_t1_dims);
-    free(r_t1_dims);
-    r_t1->data = matTensorContiguousCopy(t1);
-
-    Tensor *r_t2;
-    int *r_t2_dims = (int *) malloc(sizeof(int) * biggest.ndims);
     for (int i = 0; i < biggest.ndims; i++) {
-        if (i >= t2.ndims || t2.dimsz[i] == 1) r_t2_dims[i] = t1.dimsz[i];
-        else if (i < t2.ndims) r_t2_dims[i] = t2.dimsz[i];
+        if (i < t2.ndims) t2_ones_appended[i] = t2.dimsz[i];
+        else t2_ones_appended[i] = 1;
     }
 
-    r_t2 = matMakeTensor(biggest.ndims, r_t2_dims);
-    free(r_t2_dims);
-    r_t2->data = matTensorContiguousCopy(t2);
+    for (int i = 0; i < biggest.ndims; i++) {
+        if (t1_ones_appended[i] != t2_ones_appended[i] && \
+            (t1_ones_appended[i] != 1 && t2_ones_appended[i] != 1)) {
+            freeTensor(new_t1);
+            freeTensor(new_t2);
+            free(t1_ones_appended);
+            free(t2_ones_appended);
 
-    // Extend each required dimension
+            return MAT_UNFIT_TENSORS;
+        }
+    }
 
-    for (int dim = 0; dim < t1.ndims; dim++) {}
+    // Since only ones are appended, dimensions are exactly the same
+    Tensor *t1_res = matMakeTensor(biggest.ndims, t1_ones_appended);
+    t1_res->data = matTensorContiguousCopy(t1);
+    Tensor *t2_res = matMakeTensor(biggest.ndims, t2_ones_appended);
+    t2_res->data = matTensorContiguousCopy(t2);
 
-    *t1r = r_t1;
-    *t2r = r_t2;
+    free(t1_ones_appended);
+    free(t2_ones_appended);
     
-    // Start by making two equally sized Tensors. If a dimension is needed, pad it with 1.
+    // Expand dimensions
+    for (int i = 0; i < t1_res->ndims; i++) {
+        if (t1_res->dimsz[i] == 1 && t2_res->dimsz[i] != 1) {
+            Tensor *new_t1_res;
+            matTensorExtendDim(*t1_res, i, t2_res->dimsz[i], &new_t1_res);
+            freeTensor(t1_res);
+            t1_res = new_t1_res;
+        }
+    }
+    for (int i = 0; i < t2_res->ndims; i++) {
+        if (t2_res->dimsz[i] == 1 && t1_res->dimsz[i] != 1) {
+            Tensor *new_t2_res;
+            matTensorExtendDim(*t2_res, i, t1_res->dimsz[i], &new_t2_res);
+            freeTensor(t2_res);
+            t2_res = new_t2_res;
+        }
+    }
     
-    // Then, if any dimension is 1, duplicate it to fit the other dimension.
-    //
-    // If any two dimensions are not equal, stretch the smaller one,
-    // unless the smaller one 
+    *t1r = t1_res;
+    *t2r = t2_res;
 
     return MAT_NO_ERROR;
-}
-
-static inline void freeMatrix2(Matrix2 *m2) {
-    if (m2 != NULL) {
-        free(m2->data);
-        m2->data = NULL;
-    }
-    free(m2);
-}
-
-static inline void freeTensor(Tensor *t) {
-    if (t != NULL) {
-        free(t->data);
-        t->data = NULL;
-        free(t->dimsz);
-        t->dimsz = NULL;
-        free(t->stride);
-        t->stride = NULL;
-    }
-    free(t);
-}
-
-// NOTE: Shouldn't this be the standard?
-// Destructor frees the internal logic, user is responsible for freeing the containing structure.
-static inline void freeTensorD(Tensor t) {
-    free(t.data);
-    t.data = NULL;
-    free(t.dimsz);
-    t.dimsz = NULL;
-    free(t.stride);
-    t.stride = NULL;
 }
 
 #endif

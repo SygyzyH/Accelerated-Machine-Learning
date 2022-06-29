@@ -84,6 +84,14 @@ Tensor* matMakeTensor(int ndims, int *dims) {
     return mn;
 }
 
+Tensor* matMakeTScalar(double s) {
+    Tensor *r = matMakeTensor(1, (int []) { 1 });
+    r->data = (double *) malloc(sizeof(double));
+    r->data[0] = s;
+
+    return r;
+}
+
 // Get a refrance to the value of a matrix at a given index.
 /*
  * `m` - input matrix.
@@ -182,6 +190,174 @@ double* matTensorContiguousCopy(Tensor m) {
     }
     
     return r;
+}
+
+MatrixErr matTensorExtendDim(Tensor t, int dim, int rep, Tensor **r) {
+    if (r == NULL) return MAT_NULL_PTR;
+    *r = NULL;
+    if (dim < 0 || dim >= t.ndims) return MAT_DIMENSION_OUT_OF_RANGE;
+    
+    int *dims = (int *) malloc(sizeof(int) * t.ndims);
+    for (int i = 0; i < t.ndims; i++) 
+        if (i != dim) dims[i] = t.dimsz[i];
+        else dims[i] = t.dimsz[i] * rep;
+    Tensor *res = matMakeTensor(t.ndims, dims);
+    res->data = (double *) malloc(sizeof(double) * res->literal_size);
+
+    for (int i = 0; i < res->literal_size; i++) {
+        int *ind = matNIAt(*res, i);
+        if (ind[dim] >= t.dimsz[dim]) {
+            double *r_dest = matNAtI(*res, ind);
+            ind[dim] %= t.dimsz[dim];
+            *r_dest = *matNAtI(t, ind);
+        } else *matNAtI(*res, ind) = *matNAtI(t, ind);
+
+        free(ind);
+    }
+
+    *r = res;
+
+    return MAT_NO_ERROR;
+}
+
+// Standardized mul operator for any two tensors.
+// Iterate over the first dimension of the first tensor and the second dimension of the
+// second tensor. Sum their product.
+// The result is sized t1.dims[1:end]t2.dims[0,2:end]. 
+// If the resulting dimension is 0 than a scalar is returned.
+MatrixErr matDot(Tensor t1, Tensor t2, Tensor **r) {
+    if (r == NULL) return MAT_NULL_PTR;
+    *r = NULL;
+    Tensor *new_t1 = matTensorReduce(t1);
+    Tensor *new_t2 = matTensorReduce(t2);
+    t1 = *new_t1;
+    t2 = *new_t2;
+    int t2_second_dim = (t2.ndims < 2)? 0 : 1;
+    if (!matTensorIsScalar(t1) && !matTensorIsScalar(t2)) {
+        if (t1.dimsz[0] != t2.dimsz[t2_second_dim]) {
+            freeTensor(new_t1);
+            freeTensor(new_t2);
+            return MAT_DIMENSION_MISTMATCH;
+        }
+    }
+
+    int res_ndims;
+    int *res_dims = NULL;
+    if (matTensorIsScalar(t1)) {
+        res_ndims = t2.ndims;
+        res_dims = t2.dimsz;
+    } else if (matTensorIsScalar(t2)) {
+        res_ndims = t1.ndims;
+        res_dims = t1.dimsz;
+    } else {
+        res_ndims = t1.ndims + t2.ndims - 2;
+        if (res_ndims == 0) {
+            res_ndims = 1;
+            res_dims = (int *) malloc(sizeof(int) * res_ndims);
+            res_dims[0] = 1;
+        } else {
+            res_dims = (int *) malloc(sizeof(int) * res_ndims);
+            for (int i = 0; i < res_ndims; i++) {
+                if (i + 1 < t1.ndims)
+                    res_dims[i] = t1.dimsz[i + 1];
+                else {
+                    int t2_corrected_i = i - t1.ndims + 1;
+                    if (t2_corrected_i < t2_second_dim)
+                        res_dims[i] = t2.dimsz[t2_corrected_i];
+                    else res_dims[i] = t2.dimsz[t2_corrected_i + 1];
+                }
+            }
+        }
+    }
+    Tensor *res = matMakeTensor(res_ndims, res_dims);
+    res->data = (double *) malloc(sizeof(double) * res->literal_size);
+    if (res_dims != t1.dimsz && res_dims != t2.dimsz) free(res_dims);
+    res_dims = NULL;
+    
+    int *t1_ind = calloc(t1.ndims, sizeof(int));
+    int *t2_ind = calloc(t2.ndims, sizeof(int));
+
+    for (int i = 0; i < res->literal_size; i++) {
+        double sum = 0;
+        for (int com_dimsz = 0; com_dimsz < t1.dimsz[0] && com_dimsz < t2.dimsz[t2_second_dim]; com_dimsz++) {
+            double *t1_p = matNAtI(t1, t1_ind);
+            double *t2_p = matNAtI(t2, t2_ind);
+            sum += *t1_p * *t2_p;
+
+            t1_ind[0]++;
+            if (t1_ind[0] > t1.dimsz[0]) t1_ind[0] = 0;
+            t2_ind[t2_second_dim]++;
+            if (t2_ind[t2_second_dim] > t2.dimsz[t2_second_dim]) t2_ind[t2_second_dim] = 0;
+        } 
+
+        int *res_ind = matNIAt(*res, i);
+        *matNAtI(*res, res_ind) = sum;
+        free(res_ind);
+        
+        for (int ndims = 0; ndims < t2.ndims; ndims++) {
+            if (t2_ind[ndims] >= t2.dimsz[ndims]) {
+                t2_ind[ndims] = 0;
+                if (t2_second_dim && ndims == t2_second_dim) {
+                    t2_ind[ndims - 1]++;
+                    if (t2_ind[ndims - 1] >= t2.dimsz[ndims - 1]) {
+                        t2_ind[ndims - 1] = 0;
+                        t2_ind[ndims + 1]++;
+                    }
+                } else if (ndims < t2.ndims - 1) t2_ind[ndims + 1]++;
+            }
+        }
+        int final_dim = 1;
+        for (int ndims = 0; ndims < t2.ndims; ndims++) if (t2_ind[ndims] != 0) final_dim = 0;
+        if (!final_dim) t1_ind[0] = 0;
+
+        for (int ndims = 0; ndims < t1.ndims; ndims++) {
+            if (t1_ind[ndims] >= t1.dimsz[ndims]) {
+                t1_ind[ndims] = 0;
+                if (ndims < t1.ndims - 1) t1_ind[ndims + 1]++;
+            }
+        }
+    }
+
+    free(t1_ind);
+    free(t2_ind);
+
+    freeTensor(new_t1);
+    freeTensor(new_t2);
+    
+    *r = res;
+
+    return MAT_NO_ERROR;
+}
+
+MatrixErr matSubT(Tensor t1, Tensor t2, Tensor **r) {
+    if (r == NULL) return MAT_NULL_PTR;
+    *r = NULL;
+
+    Tensor *new_t1;
+    Tensor *new_t2;
+    MatrixErr error = matTensorFit(t1, t2, &new_t1, &new_t2);
+
+    if (error != MAT_NO_ERROR) {
+        freeTensor(new_t1);
+        freeTensor(new_t2);
+
+        return error;
+    }
+
+    Tensor *res = matMakeTensor(new_t1->ndims, new_t1->dimsz);
+    res->data = (double *) malloc(sizeof(double) * res->literal_size);
+
+    for (int i = 0; i < new_t1->literal_size; i++) {
+        int *ind1 = matNIAt(*new_t1, i);
+        int *ind2 = matNIAt(*new_t2, i);
+        int *indr = matNIAt(*res, i);
+
+        *matNAtI(*res, indr) = *matNAtI(*new_t1, ind1) - *matNAtI(*new_t2, ind2);
+    }
+
+    *r = res;
+
+    return MAT_NO_ERROR;
 }
 
 MatrixErr matMul(Matrix2 m1, Matrix2 m2, Matrix2 **r) {
@@ -302,40 +478,3 @@ Tensor* matTTensor(Tensor m) {
     return res;
 }
 
-// PERF: Write this using GPU acceleration.
-MatrixErr matMulTS(Tensor t, double s, Tensor **r) {
-    if (r == NULL) return MAT_NULL_PTR;
-
-    Tensor *res;
-    res = matMakeTensor(t.ndims, t.dimsz);
-    res->data = (double *) malloc(sizeof(double) * res->literal_size);
-
-    for (int i = 0; i < t.literal_size; i++) {
-        int *ind = matNIAt(t, i);
-        double r = *matNAtI(t, ind) * s;
-        *matNAtI(*res, ind) = r;
-
-        free(ind);
-    }
-
-    *r = res;
-
-    return MAT_NO_ERROR;
-}
-
-// PERF: Write this using GPU acceleration.
-MatrixErr matSubTT(Tensor t1, Tensor t2, Tensor **r) {
-    if (r == NULL) return MAT_NULL_PTR;
-    if (t1.ndims != t2.ndims) return MAT_DIMENSION_MISTMATCH;
-    for (int i = 0; i < t1.ndims; i++) if (t1.dimsz[i] != t2.dimsz[i]) return MAT_DIMENSION_MISTMATCH;
-
-    Tensor *res;
-    res = matMakeTensor(t1.ndims, t1.dimsz);
-    res->data = (double *) malloc(sizeof(double) * res->literal_size);
-
-    for (int i = 0; i < res->literal_size; i++) res->data[i] = t1.data[i] - t2.data[i];
-
-    *r = res;
-
-    return MAT_NO_ERROR;
-}

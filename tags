@@ -215,9 +215,10 @@ MAT_DIMENSION_OUT_OF_RANGE	matrix/mat.h	/^    MAT_DIMENSION_OUT_OF_RANGE,$/;"	e	
 MAT_H	matrix/mat.h	/^#define MAT_H$/;"	d
 MAT_INITIALIZATION_FAILED	matrix/mat.h	/^    MAT_INITIALIZATION_FAILED,$/;"	e	enum:__anonde711da10303
 MAT_KERNEL_FAILURE	matrix/mat.h	/^    MAT_KERNEL_FAILURE,$/;"	e	enum:__anonde711da10303
-MAT_NO_ERROR	matrix/mat.h	/^    MAT_NO_ERROR,$/;"	e	enum:__anonde711da10303
+MAT_NO_ERROR	matrix/mat.h	/^    MAT_NO_ERROR=0,$/;"	e	enum:__anonde711da10303
 MAT_NULL_PTR	matrix/mat.h	/^    MAT_NULL_PTR$/;"	e	enum:__anonde711da10303
 MAT_PRINT_CUTOFF	matrix/mat.h	/^#define MAT_PRINT_CUTOFF /;"	d
+MAT_UNFIT_TENSORS	matrix/mat.h	/^    MAT_UNFIT_TENSORS,$/;"	e	enum:__anonde711da10303
 MAT_UNINITIALIZED	matrix/mat.h	/^    MAT_UNINITIALIZED,$/;"	e	enum:__anonde711da10303
 MINGW	build/CMakeFiles/3.16.3/CMakeCCompiler.cmake	/^  set(MINGW 1)$/;"	v
 MINGW	build/CMakeFiles/3.16.3/CMakeCXXCompiler.cmake	/^  set(MINGW 1)$/;"	v
@@ -235,7 +236,7 @@ ML_LAYER_INVALID_INPUT_DIMS	ml/ml.h	/^    ML_LAYER_INVALID_INPUT_DIMS,$/;"	e	enu
 ML_LAYER_INVALID_PARAMETERS	ml/ml.h	/^    ML_LAYER_INVALID_PARAMETERS,$/;"	e	enum:__anonc9c8b63c0103
 ML_LAYER_INVALID_WEIGHTS	ml/ml.h	/^    ML_LAYER_INVALID_WEIGHTS,$/;"	e	enum:__anonc9c8b63c0103
 ML_MACHINE_UNINITIALIZED_LAYER	ml/ml.h	/^    ML_MACHINE_UNINITIALIZED_LAYER,$/;"	e	enum:__anonc9c8b63c0103
-ML_NO_ERR	ml/ml.h	/^    ML_NO_ERR,$/;"	e	enum:__anonc9c8b63c0103
+ML_NO_ERR	ml/ml.h	/^    ML_NO_ERR=0,$/;"	e	enum:__anonc9c8b63c0103
 ML_NULL_PTR	ml/ml.h	/^    ML_NULL_PTR$/;"	e	enum:__anonc9c8b63c0103
 ML_PROG	ml/.src/mlsrc.h	/^#define ML_PROG /;"	d
 ML_PROTOTYPE_LAYER	ml/ml.h	/^#define ML_PROTOTYPE_LAYER(/;"	d
@@ -454,26 +455,29 @@ main.o	build/Makefile	/^main.o: main.c.o$/;"	t
 main.s	build/Makefile	/^main.s: main.c.s$/;"	t
 mat2AsTensor	matrix/mat.h	/^static inline Tensor* mat2AsTensor(Matrix2 m) {$/;"	f	typeref:typename:Tensor *
 matAdd	matrix/mat.c	/^MatrixErr matAdd(Matrix2 m1, Matrix2 m2, Matrix2 **r) {$/;"	f	typeref:typename:MatrixErr
+matDot	matrix/mat.c	/^MatrixErr matDot(Tensor t1, Tensor t2, Tensor **r) {$/;"	f	typeref:typename:MatrixErr
 matGetErrorString	matrix/mat.h	/^static const char* matGetErrorString(MatrixErr error) {$/;"	f	typeref:typename:const char *
 matGetExtendedError	matrix/mat.h	/^static inline cl_int matGetExtendedError() {$/;"	f	typeref:typename:cl_int
 matInit	matrix/mat.c	/^MatrixErr matInit() {$/;"	f	typeref:typename:MatrixErr
 matMakeMatrix2	matrix/mat.c	/^Matrix2* matMakeMatrix2(int width, int height) {$/;"	f	typeref:typename:Matrix2 *
+matMakeTScalar	matrix/mat.c	/^Tensor* matMakeTScalar(double s) {$/;"	f	typeref:typename:Tensor *
 matMakeTensor	matrix/mat.c	/^Tensor* matMakeTensor(int ndims, int *dims) {$/;"	f	typeref:typename:Tensor *
 matMul	matrix/mat.c	/^MatrixErr matMul(Matrix2 m1, Matrix2 m2, Matrix2 **r) {$/;"	f	typeref:typename:MatrixErr
-matMulTS	matrix/mat.c	/^MatrixErr matMulTS(Tensor t, double s, Tensor **r) {$/;"	f	typeref:typename:MatrixErr
 matNAtI	matrix/mat.c	/^double* matNAtI(Tensor m, int *indecies) {$/;"	f	typeref:typename:double *
 matNIAt	matrix/mat.c	/^int* matNIAt(Tensor m, int literal) {$/;"	f	typeref:typename:int *
 matPrintMatrix2	matrix/mat.h	/^static inline void matPrintMatrix2(Matrix2 m) {$/;"	f	typeref:typename:void
 matPrintTensor	matrix/mat.h	/^static void matPrintTensor(Tensor m) {$/;"	f	typeref:typename:void
 matSub	matrix/mat.c	/^MatrixErr matSub(Matrix2 m1, Matrix2 m2, Matrix2 **r) {$/;"	f	typeref:typename:MatrixErr
-matSubTT	matrix/mat.c	/^MatrixErr matSubTT(Tensor t1, Tensor t2, Tensor **r) {$/;"	f	typeref:typename:MatrixErr
+matSubT	matrix/mat.c	/^MatrixErr matSubT(Tensor t1, Tensor t2, Tensor **r) {$/;"	f	typeref:typename:MatrixErr
 matT2	matrix/mat.c	/^Matrix2* matT2(Matrix2 m) {$/;"	f	typeref:typename:Matrix2 *
 matTAsMatrix2	matrix/mat.h	/^static inline Matrix2* matTAsMatrix2(Tensor m, int width, int height) {$/;"	f	typeref:typename:Matrix2 *
 matTPtrAsIndex	matrix/mat.h	/^static inline int matTPtrAsIndex(Tensor m, double *ptr) {$/;"	f	typeref:typename:int
 matTTensor	matrix/mat.c	/^Tensor* matTTensor(Tensor m) {$/;"	f	typeref:typename:Tensor *
 matTensorContiguousCopy	matrix/mat.c	/^double* matTensorContiguousCopy(Tensor m) {$/;"	f	typeref:typename:double *
+matTensorExtendDim	matrix/mat.c	/^MatrixErr matTensorExtendDim(Tensor t, int dim, int rep, Tensor **r) {$/;"	f	typeref:typename:MatrixErr
 matTensorFit	matrix/mat.h	/^static MatrixErr matTensorFit(Tensor t1, Tensor t2, Tensor **t1r, Tensor **t2r) {$/;"	f	typeref:typename:MatrixErr
-matTensorFit2	matrix/mat.h	/^static MatrixErr matTensorFit2(Tensor t1, Tensor t2, Tensor **t1r, Tensor **t2r) {$/;"	f	typeref:typename:MatrixErr
+matTensorIsScalar	matrix/mat.h	/^static inline int matTensorIsScalar(Tensor t) {$/;"	f	typeref:typename:int
+matTensorReduce	matrix/mat.h	/^static inline Tensor* matTensorReduce(Tensor t) {$/;"	f	typeref:typename:Tensor *
 matTensorSubMatrix2	matrix/mat.c	/^Matrix2* matTensorSubMatrix2(Tensor m, int *start, int width, int height) {$/;"	f	typeref:typename:Matrix2 *
 matinit	matrix/mat.c	/^bool matinit = false;$/;"	v	typeref:typename:bool
 matrix/mat.c.i	build/Makefile	/^matrix\/mat.c.i:$/;"	t

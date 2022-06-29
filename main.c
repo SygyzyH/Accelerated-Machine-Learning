@@ -17,11 +17,6 @@ int main() {
 
     error = matInit();
 
-    // MatrixN *print_test = matMakeMatrixN(6, (int []) { 2, 2, 2, 2, 2, 2, 2, 2 });
-    // print_test->data = (double *) malloc(sizeof(double) * print_test->literal_size);
-    // for (int i = 0; i < print_test->literal_size; i++) print_test->data[i] = i;
-    // matPrintMatrixN(*print_test);
-    
     Matrix2 *l1w = matMakeMatrix2(2, 2);
     Matrix2 *l2w = matMakeMatrix2(1, 2);
     l1w->data = (double []) { 0.11, 0.12, 0.21, 0.08 };
@@ -39,7 +34,6 @@ int main() {
     Tensor *out = NULL;
 
     error = mlMachineFeedForward(m, inp, &out);
-    fprintf(stderr, "error: %s\n", mlGetErrorString(error));
 
     assert(out != NULL);
     matPrintTensor(*out);
@@ -53,12 +47,11 @@ int main() {
     error = mlTrainInstance(inst);
     printf("training error: %s\n", mlGetErrorString(error));
 
-    /*Tensor *o2 = NULL;
-    mlMachineFeedForward(&m, inp, &o2);
+    Tensor *o2 = NULL;
+    mlMachineFeedForward(m, inp, &o2);
 
     assert(o2 != NULL);
-    matPrintTensor(*out);*/
-    //matPrintMatrix2(*(Matrix2 *)m.layers[0]->weights);
+    matPrintTensor(*o2);
  
     claCln();
     
