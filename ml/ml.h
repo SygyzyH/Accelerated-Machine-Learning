@@ -224,6 +224,8 @@ MLErr mlTrainInstance(LearningInstance *instnace);
 /* Prototype */
 
 ML_PROTOTYPE_LAYER(FullyConnected);
+ML_PROTOTYPE_LAYER(Bias);
+ML_PROTOTYPE_LAYER(ReLu);
 ML_PROTOTYPE_LAYER(MeanSquaredError);
 
 ML_PROTOTYPE_OPTIMIZER(SGD);

@@ -455,6 +455,7 @@ main.o	build/Makefile	/^main.o: main.c.o$/;"	t
 main.s	build/Makefile	/^main.s: main.c.s$/;"	t
 mat2AsTensor	matrix/mat.h	/^static inline Tensor* mat2AsTensor(Matrix2 m) {$/;"	f	typeref:typename:Tensor *
 matAdd	matrix/mat.c	/^MatrixErr matAdd(Matrix2 m1, Matrix2 m2, Matrix2 **r) {$/;"	f	typeref:typename:MatrixErr
+matAddT	matrix/mat.c	/^MatrixErr matAddT(Tensor t1, Tensor t2, Tensor **r) {$/;"	f	typeref:typename:MatrixErr
 matDot	matrix/mat.c	/^MatrixErr matDot(Tensor t1, Tensor t2, Tensor **r) {$/;"	f	typeref:typename:MatrixErr
 matGetErrorString	matrix/mat.h	/^static const char* matGetErrorString(MatrixErr error) {$/;"	f	typeref:typename:const char *
 matGetExtendedError	matrix/mat.h	/^static inline cl_int matGetExtendedError() {$/;"	f	typeref:typename:cl_int
@@ -474,6 +475,7 @@ matTAsMatrix2	matrix/mat.h	/^static inline Matrix2* matTAsMatrix2(Tensor m, int 
 matTPtrAsIndex	matrix/mat.h	/^static inline int matTPtrAsIndex(Tensor m, double *ptr) {$/;"	f	typeref:typename:int
 matTTensor	matrix/mat.c	/^Tensor* matTTensor(Tensor m) {$/;"	f	typeref:typename:Tensor *
 matTensorContiguousCopy	matrix/mat.c	/^double* matTensorContiguousCopy(Tensor m) {$/;"	f	typeref:typename:double *
+matTensorDeepCopy	matrix/mat.h	/^static inline Tensor* matTensorDeepCopy(Tensor t) {$/;"	f	typeref:typename:Tensor *
 matTensorExtendDim	matrix/mat.c	/^MatrixErr matTensorExtendDim(Tensor t, int dim, int rep, Tensor **r) {$/;"	f	typeref:typename:MatrixErr
 matTensorFit	matrix/mat.h	/^static MatrixErr matTensorFit(Tensor t1, Tensor t2, Tensor **t1r, Tensor **t2r) {$/;"	f	typeref:typename:MatrixErr
 matTensorIsScalar	matrix/mat.h	/^static inline int matTensorIsScalar(Tensor t) {$/;"	f	typeref:typename:int
@@ -507,6 +509,12 @@ ml/optimizer.c.s	build/Makefile	/^ml\/optimizer.c.s:$/;"	t
 ml/optimizer.i	build/Makefile	/^ml\/optimizer.i: ml\/optimizer.c.i$/;"	t
 ml/optimizer.o	build/Makefile	/^ml\/optimizer.o: ml\/optimizer.c.o$/;"	t
 ml/optimizer.s	build/Makefile	/^ml\/optimizer.s: ml\/optimizer.c.s$/;"	t
+mlBiasCleanup	ml/layers.c	/^MLErr mlBiasCleanup(Layer *self) {$/;"	f	typeref:typename:MLErr
+mlBiasDerive	ml/layers.c	/^MLErr mlBiasDerive(Layer *self, Tensor upstream_derivatives, Tensor activation, Tensor **downstr/;"	f	typeref:typename:MLErr
+mlBiasErrorString	ml/layers.c	/^const char* mlBiasErrorString(int error) {$/;"	f	typeref:typename:const char *
+mlBiasForward	ml/layers.c	/^MLErr mlBiasForward(Layer *self, Tensor input, Tensor **output) {$/;"	f	typeref:typename:MLErr
+mlBiasInitialize	ml/layers.c	/^MLErr mlBiasInitialize(Layer *self) {$/;"	f	typeref:typename:MLErr
+mlBiasUpdate	ml/layers.c	/^MLErr mlBiasUpdate(Layer *self, Tensor self_derivative) {$/;"	f	typeref:typename:MLErr
 mlFullyConnectedCleanup	ml/layers.c	/^MLErr mlFullyConnectedCleanup(Layer *self) {$/;"	f	typeref:typename:MLErr
 mlFullyConnectedDerive	ml/layers.c	/^MLErr mlFullyConnectedDerive(Layer *self, Tensor upstream_derivatives, Tensor activation, Tensor/;"	f	typeref:typename:MLErr
 mlFullyConnectedErrorString	ml/layers.c	/^const char* mlFullyConnectedErrorString(int error) {$/;"	f	typeref:typename:const char *
@@ -526,6 +534,12 @@ mlMeanSquaredErrorErrorString	ml/layers.c	/^const char* mlMeanSquaredErrorErrorS
 mlMeanSquaredErrorForward	ml/layers.c	/^MLErr mlMeanSquaredErrorForward(Layer *self, Tensor input, Tensor **output) {$/;"	f	typeref:typename:MLErr
 mlMeanSquaredErrorInitialize	ml/layers.c	/^MLErr mlMeanSquaredErrorInitialize(Layer *self) {$/;"	f	typeref:typename:MLErr
 mlMeanSquaredErrorUpdate	ml/layers.c	/^MLErr mlMeanSquaredErrorUpdate(Layer *self, Tensor self_derivative) {$/;"	f	typeref:typename:MLErr
+mlReLuCleanup	ml/layers.c	/^MLErr mlReLuCleanup(Layer *self) {$/;"	f	typeref:typename:MLErr
+mlReLuDerive	ml/layers.c	/^MLErr mlReLuDerive(Layer *self, Tensor upstream_derivatives, Tensor activation, Tensor **downstr/;"	f	typeref:typename:MLErr
+mlReLuErrorString	ml/layers.c	/^const char* mlReLuErrorString(int error) {$/;"	f	typeref:typename:const char *
+mlReLuForward	ml/layers.c	/^MLErr mlReLuForward(Layer *self, Tensor input, Tensor **output) {$/;"	f	typeref:typename:MLErr
+mlReLuInitialize	ml/layers.c	/^MLErr mlReLuInitialize(Layer *self) {$/;"	f	typeref:typename:MLErr
+mlReLuUpdate	ml/layers.c	/^MLErr mlReLuUpdate(Layer *self, Tensor self_derivative) {$/;"	f	typeref:typename:MLErr
 mlSGD	ml/optimizer.c	/^MLErr mlSGD(LearningInstance *self, Tensor *activations, Tensor *derivatives) {$/;"	f	typeref:typename:MLErr
 mlSGDCleanup	ml/optimizer.c	/^MLErr mlSGDCleanup(LearningInstance *self) {$/;"	f	typeref:typename:MLErr
 mlSGDInitialize	ml/optimizer.c	/^MLErr mlSGDInitialize(LearningInstance *self) {$/;"	f	typeref:typename:MLErr

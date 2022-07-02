@@ -1,5 +1,6 @@
 #include "ml.h"
 #include "../matrix/mat.h"
+#include <stdlib.h>
 
 MLErr mlMachineFeedForward(Machine machine, Tensor *input, Tensor **output) {
     if (output == NULL) return ML_NULL_PTR;
@@ -28,5 +29,39 @@ MLErr mlMachineFeedForward(Machine machine, Tensor *input, Tensor **output) {
 // TODO: Is this function usefull? Shouldn't each layer implement its weight initializer?
 // Or maybe this function is usefull to be used inside the implementation?
 Tensor* mlWeightInitializer(MLWeightInitializerType initializer, int ndims, int *dims) {
-    return NULL;
+    Tensor *res = matMakeTensor(ndims, dims);
+    res->data = (double *) malloc(sizeof(double) * res->literal_size);
+
+    switch (initializer) {
+        case ML_WEIGHT_INITIALIZER_ZEROS: {
+            for (int i = 0; i < res->literal_size; i++) {
+                int *ind = matNIAt(*res, i);
+                double *d = matNAtI(*res, ind);
+                
+                *d = 0;
+
+                free(ind);
+            }
+            break;
+        }
+        
+        case ML_WEIGHT_INITIALIZER_ONES: {
+            for (int i = 0; i < res->literal_size; i++) {
+                int *ind = matNIAt(*res, i);
+                double *d = matNAtI(*res, ind);
+                
+                *d = 1;
+
+                free(ind);
+            }
+            break;
+        }
+
+        default: {
+            freeTensor(res);
+            return NULL;
+        }
+    }
+
+    return res;
 }

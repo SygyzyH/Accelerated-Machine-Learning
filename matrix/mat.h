@@ -62,6 +62,7 @@ MatrixErr matAdd(Matrix2 m1, Matrix2 m2, Matrix2 **r);
 MatrixErr matMul(Matrix2 m1, Matrix2 m2, Matrix2 **r);
 MatrixErr matDot(Tensor t1, Tensor t2, Tensor **r);
 MatrixErr matSubT(Tensor t1, Tensor t2, Tensor **r);
+MatrixErr matAddT(Tensor t1, Tensor t2, Tensor **r);
 Matrix2* matT2(Matrix2 m);
 Tensor* matTTensor(Tensor m);
 
@@ -85,6 +86,13 @@ static const char* matGetErrorString(MatrixErr error) {
  * */
 static inline cl_int matGetExtendedError() {
     return claGetExtendedError();
+}
+
+static inline Tensor* matTensorDeepCopy(Tensor t) {
+    Tensor *res = matMakeTensor(t.ndims, t.dimsz);
+    res->data = matTensorContiguousCopy(t);
+    
+    return res;
 }
 
 static inline void freeMatrix2(Matrix2 *m2) {

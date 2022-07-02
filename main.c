@@ -25,6 +25,7 @@ int main() {
     Machine m = mlMakeMachine(3, (Layer* []) { 
                       mlMakeLayer(FullyConnected, NULL, l1w),
                       mlMakeLayer(FullyConnected, NULL, l2w),
+                      mlMakeLayer(Bias, NULL, mlWeightInitializer(ML_WEIGHT_INITIALIZER_ZEROS, 1, (int []) { 1 })),
                       mlMakeLayer(MeanSquaredError, NULL, NULL)
                 });
 

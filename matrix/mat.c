@@ -192,6 +192,7 @@ double* matTensorContiguousCopy(Tensor m) {
     return r;
 }
 
+// PERF: implement GPU.
 MatrixErr matTensorExtendDim(Tensor t, int dim, int rep, Tensor **r) {
     if (r == NULL) return MAT_NULL_PTR;
     *r = NULL;
@@ -220,6 +221,7 @@ MatrixErr matTensorExtendDim(Tensor t, int dim, int rep, Tensor **r) {
     return MAT_NO_ERROR;
 }
 
+// PERF: implement GPU.
 // Standardized mul operator for any two tensors.
 // Iterate over the first dimension of the first tensor and the second dimension of the
 // second tensor. Sum their product.
@@ -329,6 +331,7 @@ MatrixErr matDot(Tensor t1, Tensor t2, Tensor **r) {
     return MAT_NO_ERROR;
 }
 
+// PERF: implement GPU.
 MatrixErr matSubT(Tensor t1, Tensor t2, Tensor **r) {
     if (r == NULL) return MAT_NULL_PTR;
     *r = NULL;
@@ -353,6 +356,38 @@ MatrixErr matSubT(Tensor t1, Tensor t2, Tensor **r) {
         int *indr = matNIAt(*res, i);
 
         *matNAtI(*res, indr) = *matNAtI(*new_t1, ind1) - *matNAtI(*new_t2, ind2);
+    }
+
+    *r = res;
+
+    return MAT_NO_ERROR;
+}
+
+// PERF: implement GPU.
+MatrixErr matAddT(Tensor t1, Tensor t2, Tensor **r) {
+    if (r == NULL) return MAT_NULL_PTR;
+    *r = NULL;
+
+    Tensor *new_t1;
+    Tensor *new_t2;
+    MatrixErr error = matTensorFit(t1, t2, &new_t1, &new_t2);
+
+    if (error != MAT_NO_ERROR) {
+        freeTensor(new_t1);
+        freeTensor(new_t2);
+
+        return error;
+    }
+
+    Tensor *res = matMakeTensor(new_t1->ndims, new_t1->dimsz);
+    res->data = (double *) malloc(sizeof(double) * res->literal_size);
+
+    for (int i = 0; i < new_t1->literal_size; i++) {
+        int *ind1 = matNIAt(*new_t1, i);
+        int *ind2 = matNIAt(*new_t2, i);
+        int *indr = matNIAt(*res, i);
+
+        *matNAtI(*res, indr) = *matNAtI(*new_t1, ind1) + *matNAtI(*new_t2, ind2);
     }
 
     *r = res;
