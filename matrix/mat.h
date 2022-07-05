@@ -51,7 +51,7 @@ typedef enum {
 MatrixErr matInit();
 Matrix2* matMakeMatrix2(int width, int height);
 Tensor* matMakeTensor(int ndims, int *dims);
-Tensor* matMakeTScalar(double s);
+Tensor* matMakeTensorScalar(double s);
 double* matNAtI(Tensor m, int *indecies);
 int* matNIAt(Tensor m, int literal);
 Matrix2* matTensorSubMatrix2(Tensor m, int *start, int width, int height);
@@ -86,13 +86,6 @@ static const char* matGetErrorString(MatrixErr error) {
  * */
 static inline cl_int matGetExtendedError() {
     return claGetExtendedError();
-}
-
-static inline Tensor* matTensorDeepCopy(Tensor t) {
-    Tensor *res = matMakeTensor(t.ndims, t.dimsz);
-    res->data = matTensorContiguousCopy(t);
-    
-    return res;
 }
 
 static inline void freeMatrix2(Matrix2 *m2) {
@@ -148,7 +141,7 @@ static inline int matTPtrAsIndex(Tensor m, double *ptr) {
  * `height` - output matrix height.
  * returns matrix, or NULL if invalid.
  * */
-static inline Matrix2* matTAsMatrix2(Tensor m, int width, int height) {
+static inline Matrix2* matTensorAsMatrix2(Tensor m, int width, int height) {
     // Make index an array sized `m.ndims` filled with zeros.
     int *start = (int *) malloc(sizeof(int) * m.ndims);
     for (int i = 0; i < m.ndims; i++) start[i] = 0;
@@ -166,12 +159,20 @@ static inline Matrix2* matTAsMatrix2(Tensor m, int width, int height) {
 static inline Tensor* mat2AsTensor(Matrix2 m) {
     // New matrix is just a matrix with two dimesions.
     Tensor *r = matMakeTensor(2, (int []) { m.width, m.height });
+    if (r == NULL) return r;
     r->data = (double *) malloc(sizeof(double) * r->literal_size);
 
     // Deep copy data.
-    if (r != NULL) for (int i = 0; i < r->literal_size; i++) r->data[i] = m.data[i];
+    for (int i = 0; i < r->literal_size; i++) r->data[i] = m.data[i];
     
     return r;
+}
+
+static inline Tensor* matTensorDeepCopy(Tensor t) {
+    Tensor *res = matMakeTensor(t.ndims, t.dimsz);
+    res->data = matTensorContiguousCopy(t);
+    
+    return res;
 }
 
 // Print `Matrix2`.

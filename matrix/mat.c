@@ -84,7 +84,7 @@ Tensor* matMakeTensor(int ndims, int *dims) {
     return mn;
 }
 
-Tensor* matMakeTScalar(double s) {
+Tensor* matMakeTensorScalar(double s) {
     Tensor *r = matMakeTensor(1, (int []) { 1 });
     r->data = (double *) malloc(sizeof(double));
     r->data[0] = s;

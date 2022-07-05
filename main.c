@@ -22,9 +22,9 @@ int main() {
     l1w->data = (double []) { 0.11, 0.12, 0.21, 0.08 };
     l2w->data = (double []) { 0.14, 0.15 };
 
-    Machine m = mlMakeMachine(3, (Layer* []) { 
-                      mlMakeLayer(FullyConnected, NULL, l1w),
-                      mlMakeLayer(FullyConnected, NULL, l2w),
+    Machine m = mlMakeMachine(4, (Layer* []) { 
+                      mlMakeLayer(FullyConnected, NULL, matTensorAsMatrix2(*mlWeightInitializer(ML_WEIGHT_INITIALIZER_GLOROT, 2, (int []) { 2, 2 }), 2, 2)),
+                      mlMakeLayer(FullyConnected, NULL, matTensorAsMatrix2(*mlWeightInitializer(ML_WEIGHT_INITIALIZER_GLOROT, 2, (int []) { 1, 2 }), 1, 2)),
                       mlMakeLayer(Bias, NULL, mlWeightInitializer(ML_WEIGHT_INITIALIZER_ZEROS, 1, (int []) { 1 })),
                       mlMakeLayer(MeanSquaredError, NULL, NULL)
                 });
@@ -34,18 +34,22 @@ int main() {
 
     Tensor *out = NULL;
 
+    puts("Feed forward");
     error = mlMachineFeedForward(m, inp, &out);
 
     assert(out != NULL);
     matPrintTensor(*out);
 
-    Tensor *desired_output = matMakeTensor(2, (int []) { 1, 1 });
-    desired_output->data = (double []) { 1 };
+    Tensor *desired_output = matMakeTensorScalar(1);
 
     double learning_rate = 0.05;
     LearningInstance *inst = mlMakeLearningInstance(m, (void *) &learning_rate, 1, inp, desired_output, SGD);
     assert(inst != NULL);
-    error = mlTrainInstance(inst);
+    puts("Training");
+    
+    const int training_rep = 60;
+    for (int i = 0; i < training_rep; i++) error = mlTrainInstance(inst);
+
     printf("training error: %s\n", mlGetErrorString(error));
 
     Tensor *o2 = NULL;

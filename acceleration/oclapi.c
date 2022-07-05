@@ -6,6 +6,7 @@ Call the function using its name and passing its parameters.
 Automatic clean-up.
 
 TODO: Maybe also safe calls to run_kernel? (type checking, variable count checks, NULL ptr)
+TODO: Add the ability to use preallocated memory, that wont be freed after the call.
 */
 
 #include <stdlib.h>

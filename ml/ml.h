@@ -143,7 +143,8 @@ MLErr mlMachineFeedForward(Machine machine, Tensor *input, Tensor **output);
 
 typedef enum {
     ML_WEIGHT_INITIALIZER_ZEROS,
-    ML_WEIGHT_INITIALIZER_ONES
+    ML_WEIGHT_INITIALIZER_ONES,
+    ML_WEIGHT_INITIALIZER_GLOROT
 } MLWeightInitializerType;
 
 Tensor* mlWeightInitializer(MLWeightInitializerType initializer, int ndims, int *dims);
@@ -225,7 +226,11 @@ MLErr mlTrainInstance(LearningInstance *instnace);
 
 ML_PROTOTYPE_LAYER(FullyConnected);
 ML_PROTOTYPE_LAYER(Bias);
+
 ML_PROTOTYPE_LAYER(ReLu);
+ML_PROTOTYPE_LAYER(Sigmoid);
+ML_PROTOTYPE_LAYER(Tanh);
+
 ML_PROTOTYPE_LAYER(MeanSquaredError);
 
 ML_PROTOTYPE_OPTIMIZER(SGD);

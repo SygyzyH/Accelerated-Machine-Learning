@@ -21,7 +21,7 @@ MLErr mlFullyConnectedCleanup(Layer *self) {
 
 MLErr mlFullyConnectedForward(Layer *self, Tensor input, Tensor **output) {
     Matrix2 *weights = (Matrix2 *) self->weights;
-    Matrix2 *input2 = matTAsMatrix2(input, input.literal_size, 1);
+    Matrix2 *input2 = matTensorAsMatrix2(input, input.literal_size, 1);
     Matrix2 *res;
 
     MatrixErr e = matMul(*input2, *weights, &res);
@@ -64,9 +64,9 @@ MLErr mlFullyConnectedDerive(Layer *self, Tensor upstream_derivatives, Tensor ac
     *self_derivative = NULL;
 
     // self_derivative = activations * upstream_derivatives
-    Matrix2 *activation2 = matTAsMatrix2(activation, 1, activation.literal_size);
+    Matrix2 *activation2 = matTensorAsMatrix2(activation, 1, activation.literal_size);
     // HACK: Is this correct? In GD it certainly is, but does it apply to any context?
-    Matrix2 *upstream_derivatives2 = matTAsMatrix2(upstream_derivatives, upstream_derivatives.literal_size, 1);
+    Matrix2 *upstream_derivatives2 = matTensorAsMatrix2(upstream_derivatives, upstream_derivatives.literal_size, 1);
     Matrix2 *res;
 
     MatrixErr e = matMul(*activation2, *upstream_derivatives2, &res);
@@ -129,7 +129,7 @@ MLErr mlFullyConnectedUpdate(Layer *self, Tensor self_derivative) {
     Tensor *weightsn = mat2AsTensor(*((Matrix2 *) self->weights));
     matSubT(*weightsn, self_derivative, &new_weights);
     
-    Matrix2 *new_weights2 = matTAsMatrix2(*new_weights, weightsn->dimsz[0], weightsn->dimsz[1]);
+    Matrix2 *new_weights2 = matTensorAsMatrix2(*new_weights, weightsn->dimsz[0], weightsn->dimsz[1]);
 
     self->weights = (void *) new_weights2;
 
@@ -172,7 +172,7 @@ MLErr mlBiasForward(Layer *self, Tensor input, Tensor **output) {
     puts("====weights");
     matPrintTensor(*w);
     puts("====output");
-    matPrintTensor(*out);*/
+    matPrintTensor(**output);*/
 
     return ML_NO_ERR;
 }
@@ -180,6 +180,7 @@ MLErr mlBiasForward(Layer *self, Tensor input, Tensor **output) {
 MLErr mlBiasDerive(Layer *self, Tensor upstream_derivatives, Tensor activation, Tensor **downstream_derivative, Tensor **self_derivative) {
     // self_derivative = sum(upstream_derivatives)
     // downstream_derivative = upstream_derivatives
+    
     *downstream_derivative = matTensorDeepCopy(upstream_derivatives);
 
     Tensor *w = (Tensor *) self->weights;
@@ -195,9 +196,6 @@ MLErr mlBiasDerive(Layer *self, Tensor upstream_derivatives, Tensor activation, 
         return ML_LAYER_INTERNAL_ERROR;
     }
 
-    matPrintTensor(**downstream_derivative);
-    matPrintTensor(**self_derivative);
-
     return ML_NO_ERR;
 }
 
@@ -206,9 +204,6 @@ MLErr mlBiasUpdate(Layer *self, Tensor self_derivative) {
     Tensor *new_weights;
     Tensor *weightsn = (Tensor *) self->weights;
 
-    //matPrintTensor(self_derivative);
-    //matPrintTensor(*weightsn);
-    
     MatrixErr error = matSubT(*weightsn, self_derivative, &new_weights);
     if (error != MAT_NO_ERROR) {
         self->error = error;
@@ -283,7 +278,7 @@ MLErr mlMeanSquaredErrorDerive(Layer *self, Tensor upstream_derivatives, Tensor 
     }
     
     // self_derivative is never used.
-    *self_derivative = mlWeightInitializer(ML_WEIGHT_INITIALIZER_ZEROS, 1, (int []) { 1 });
+    *self_derivative = matMakeTensorScalar(-1);
 
     return ML_NO_ERR;
 }
