@@ -2,14 +2,17 @@
 #define MAT_H
 
 #include "../acceleration/oclapi.h"
+#include <stdio.h>
 #include <string.h>
 
+#define MAT_PRINT_ERR
 // TODO: Is this a good idea?
 #ifdef MAT_PRINT_ERR
 #ifdef printf_m 
 #undef printf_m
 #endif
-#define printf_m(str, ...) fprintf(stderr, "MAT_H " __func__ "Error: " str, __VA_ARGS__)
+#include <strings.h>
+#define printf_m(str, ...) fprintf(stderr, "MAT_H: %s: Error: " str, __func__, __VA_ARGS__)
 #else
 #define printf_m(str, ...)
 #endif
@@ -24,7 +27,6 @@ typedef struct {
     unsigned *odimsz;
     // Current dimsz.
     unsigned *dimsz;
-
     unsigned ndims;
 
     size_t literal_size;
@@ -49,9 +51,10 @@ typedef enum {
 MatrixErr matInit();
 Tensor* matMakeTensor(unsigned ndims, unsigned *dims, MatrixErr *e);
 Tensor* matTensorDeepCopy(Tensor *t, MatrixErr *e);
-MatrixErr matTensorFit(Tensor *t1, Tensor *t2, Tensor **t1r, Tensor **t2r);
 double* matTensorAtI(Tensor *t, unsigned *ind, MatrixErr *e);
 unsigned *matTensorIAt(Tensor *t, int literal, MatrixErr *e);
+MatrixErr matTensorFit(Tensor *t1, Tensor *t2, Tensor **t1r, Tensor **t2r);
+void matTensorPrint(Tensor *t);
 
 static const char* matGetErrorString(MatrixErr error) {
     switch (error) {

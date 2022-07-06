@@ -226,6 +226,7 @@ MAT_NO_ERROR	matrix/mat.h	/^    MAT_NO_ERROR=0,$/;"	e	enum:__anonde711da10203
 MAT_NULL_PTR	matrix/.src/mat.h	/^    MAT_NULL_PTR$/;"	e	enum:__anon76a077060303
 MAT_NULL_PTR	matrix/mat.h	/^    MAT_NULL_PTR$/;"	e	enum:__anonde711da10203
 MAT_PRINT_CUTOFF	matrix/.src/mat.h	/^#define MAT_PRINT_CUTOFF /;"	d
+MAT_PRINT_ERR	matrix/mat.h	/^#define MAT_PRINT_ERR$/;"	d
 MAT_TENSOR_NO_DATA	matrix/mat.h	/^    MAT_TENSOR_NO_DATA,$/;"	e	enum:__anonde711da10203
 MAT_TENSOR_NO_DIMS	matrix/mat.h	/^    MAT_TENSOR_NO_DIMS,$/;"	e	enum:__anonde711da10203
 MAT_UNFIT_TENSORS	matrix/.src/mat.h	/^    MAT_UNFIT_TENSORS,$/;"	e	enum:__anon76a077060303
@@ -483,7 +484,6 @@ matGetExtendedError	matrix/mat.h	/^static inline cl_int matGetExtendedError() {$
 matInit	matrix/mat.c	/^MatrixErr matInit() {$/;"	f	typeref:typename:MatrixErr
 matMakeScalar	matrix/mat.h	/^static inline Tensor* matMakeScalar(double s, MatrixErr *e) {$/;"	f	typeref:typename:Tensor *
 matMakeTensor	matrix/mat.c	/^Tensor* matMakeTensor(unsigned ndims, unsigned *dims, MatrixErr *e) {$/;"	f	typeref:typename:Tensor *
-matMakeTensorScalar	matrix/mat.c	/^Tensor* matMakeTensorScalar(double s) {$/;"	f	typeref:typename:Tensor *
 matPrintMatrix2	matrix/.src/mat.h	/^static inline void matPrintMatrix2(Matrix2 m) {$/;"	f	typeref:typename:void
 matPrintTensor	matrix/.src/mat.h	/^static void matPrintTensor(Tensor m) {$/;"	f	typeref:typename:void
 matTPtrAsIndex	matrix/.src/mat.h	/^static inline int matTPtrAsIndex(Tensor m, double *ptr) {$/;"	f	typeref:typename:int
@@ -493,8 +493,9 @@ matTensorDeepCopy	matrix/.src/mat.h	/^static inline Tensor* matTensorDeepCopy(Te
 matTensorDeepCopy	matrix/mat.c	/^Tensor* matTensorDeepCopy(Tensor *t, MatrixErr *e) {$/;"	f	typeref:typename:Tensor *
 matTensorFit	matrix/.src/mat.h	/^static MatrixErr matTensorFit(Tensor t1, Tensor t2, Tensor **t1r, Tensor **t2r) {$/;"	f	typeref:typename:MatrixErr
 matTensorFit	matrix/mat.c	/^MatrixErr matTensorFit(Tensor *t1, Tensor *t2, Tensor **t1r, Tensor **t2r) {$/;"	f	typeref:typename:MatrixErr
-matTensorIAt	matrix/mat.c	/^unsigned *matTensorIAt(Tensor *t, int literal, MatrixErr *e) {$/;"	f	typeref:typename:unsigned *
+matTensorIAt	matrix/mat.c	/^unsigned* matTensorIAt(Tensor *t, int literal, MatrixErr *e) {$/;"	f	typeref:typename:unsigned *
 matTensorIsScalar	matrix/.src/mat.h	/^static inline int matTensorIsScalar(Tensor t) {$/;"	f	typeref:typename:int
+matTensorPrint	matrix/mat.c	/^void matTensorPrint(Tensor *t) {$/;"	f	typeref:typename:void
 matTensorReduce	matrix/.src/mat.h	/^static inline Tensor* matTensorReduce(Tensor t) {$/;"	f	typeref:typename:Tensor *
 matinit	matrix/mat.c	/^bool matinit = false;$/;"	v	typeref:typename:bool
 matrix/mat.c.i	build/Makefile	/^matrix\/mat.c.i:$/;"	t

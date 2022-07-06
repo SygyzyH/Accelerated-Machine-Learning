@@ -17,7 +17,12 @@ int main() {
 
     error = matInit();
 
-    Matrix2 *l1w = matMakeMatrix2(2, 2);
+    Tensor *t = matMakeTensor(2, (unsigned []) { 2, 2 }, (MatrixErr *) &error);
+    t->data = (double *) malloc(sizeof(double) * t->literal_size);
+    for (int i = 0; i < t->literal_size; i++) t->data[i] = i;
+    matTensorPrint(t);
+
+/*    Matrix2 *l1w = matMakeMatrix2(2, 2);
     Matrix2 *l2w = matMakeMatrix2(1, 2);
     l1w->data = (double []) { 0.11, 0.12, 0.21, 0.08 };
     l2w->data = (double []) { 0.14, 0.15 };
@@ -56,7 +61,7 @@ int main() {
     mlMachineFeedForward(m, inp, &o2);
 
     assert(o2 != NULL);
-    matPrintTensor(*o2);
+    matPrintTensor(*o2);*/
  
     claCln();
     

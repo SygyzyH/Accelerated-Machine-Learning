@@ -28,7 +28,7 @@ Tensor* matMakeTensor(unsigned ndims, unsigned *dims, MatrixErr *e) {
     t->odimsz = NULL;
 
     unsigned *dimsz = ndims? (unsigned *) malloc(sizeof(unsigned) * ndims) : NULL;
-    int literal_size = 0;
+    int literal_size = 1;
     for (int i = 0; i < ndims; i++) {
         if (dims[i] == 0) {
             free(t);
@@ -52,12 +52,63 @@ Tensor* matMakeTensor(unsigned ndims, unsigned *dims, MatrixErr *e) {
     return t;
 }
 
-Tensor* matMakeTensorScalar(double s) {
-    Tensor *r = matMakeTensor(1, (unsigned []) { 1 }, NULL);
-    r->data = (double *) malloc(sizeof(double));
-    r->data[0] = s;
+void matTensorPrint(Tensor *t) {
+    {
+        MatrixErr err;
+        if (matCheckTensor(t, &err) != MAT_NO_ERROR) {
+            printf_m("Bad Tensor: %s\n", matGetErrorString(err));
+            return;
+        }
+    }
+    
+    unsigned *ind = calloc(t->ndims, sizeof(unsigned));
+    // For any even dimension, print linearly. Including 0.
+    // For any odd dimension, print newline.
+    
+    int even_iter = 1;
+    for (int i = 0; i < t->ndims; i += 2) even_iter *= t->dimsz[i];
+    int odd_iter = 1;
+    for (int i = 1; i < t->ndims; i += 2) odd_iter *= t->dimsz[i];
 
-    return r;
+    for (int odd = 0; odd < odd_iter; odd++) {
+        // Accounting for the initial `│`
+        int printed_even = -2;
+
+        for (int i = 0; i < t->ndims; i += 2) {
+            // This has to be done manually, since the `│` character is extended ASCII.
+            printed_even += 2;
+            printf("│ ");
+        }
+
+        for (int even = 0; even < even_iter; even++) {
+            printed_even += printf("%#.6g%s", *matTensorAtI(t, ind, NULL), (ind[0] == t->dimsz[0] - 1)? "" : ", ");
+            
+            // Increment and carry index.
+            ind[0]++;
+            for (int i = 0; i < t->ndims; i += 2) {
+                if (ind[i] >= t->dimsz[i]) {
+                    printed_even += 2;
+                    printf("│ ");
+                    ind[i] = 0;
+                    if (i + 2 < t->ndims) ind[i + 2]++;
+                }
+            }
+        } puts("");
+
+        if (t->ndims > 1) ind[1]++;
+        for (int i = 1; i < t->ndims; i+= 2) {
+            if (ind[i] >= t->dimsz[i]) {
+                printf("├");
+                for (int j = 0; j < printed_even - 1; j++) printf("─");
+                puts("┤");
+                ind[i] = 0;
+                if (i + 2 < t->ndims) ind[i + 2]++;
+            }
+        }
+    }
+
+    for (int i = 0; i < t->ndims - 1; i++) printf("%dx", t->dimsz[i]);
+    printf("%d\n", t->dimsz[t->ndims - 1]);
 }
 
 Tensor* matTensorDeepCopy(Tensor *t, MatrixErr *e) {
@@ -149,19 +200,24 @@ double* matTensorAtI(Tensor *t, unsigned *ind, MatrixErr *e) {
         }
     }
 
-    double *r = t->data;
+    int r = 0;
+    int mult = 1;
 
     for (int i = 0; i < t->ndims; i++) {
-        if (t->odimsz != NULL && (i > t->ndimso || t->dimsz[i] > t->odimsz[i]))
-            r += sizeof(double) * (t->dimsz[i] % t->odimsz[i]);
-        else r += sizeof(double) * t->dimsz[i];
+        if (t->odimsz != NULL && (i > t->ndimso || t->dimsz[i] > t->odimsz[i])) {
+            r += (ind[i] * mult) % t->odimsz[i];
+            mult *= t->odimsz[i];
+        } else {
+            r += ind[i] * mult;
+            mult *= t->dimsz[i];
+        }
     }
 
     if (e != NULL) *e = MAT_NO_ERROR;
-    return r;
+    return (double *) (t->data + r);
 }
 
-unsigned *matTensorIAt(Tensor *t, int literal, MatrixErr *e) {
+unsigned* matTensorIAt(Tensor *t, int literal, MatrixErr *e) {
     {
         MatrixErr err;
         if (matCheckTensor(t, &err) != MAT_NO_ERROR) {
