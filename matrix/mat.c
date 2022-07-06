@@ -20,205 +20,169 @@ MatrixErr matInit() {
     return MAT_NO_ERROR;
 }
 
-// Make Matrix2 with given dimensions.
-/* 
- * The data fielf is not populated, intead the user
- * is expected to allocate `height` * `width` memory,
- * or use a pointer that is at least that size.
- *
- * `width` - width of the matrix.
- * `height` - height of the matrix.
- * returns pointer to generated matrix, or NULL.
- * */
-Matrix2* matMakeMatrix2(int width, int height) {
-    if (width <= 0 || height <= 0) return NULL;
-
-    Matrix2 *m2 = (Matrix2 *) malloc(sizeof(Matrix2));
+Tensor* matMakeTensor(unsigned ndims, unsigned *dims, MatrixErr *e) {
+    Tensor *t = (Tensor *) malloc(sizeof(Tensor));
     
-    m2->width = width;
-    m2->height = height;
-    m2->data = NULL;
+    t->ndims = ndims;
+    t->ndimso = ndims;
+    t->odimsz = NULL;
 
-    return m2;
-}
-
-// Make MatrixN with given dimensions.
-/*
- * The `data` field is not populated,
- * intead the expected length of the data is put in
- * `literal_size`. The user is expected to allocate 
- * this much memory, or use a pointer that is at least
- * `literal_size`.
- * 
- * `ndims` - number of dimensions.
- * `dims` - dimension size.
- * returns pointer to generated matrix, or NULL.
- * */
-Tensor* matMakeTensor(int ndims, int *dims) {
-    if (ndims <= 0) return NULL;
-    for (int i = 0; i < ndims; i++) if (dims[i] < 1) return NULL;
-
-    Tensor *mn = (Tensor *) malloc(sizeof(Tensor));
-    
-    mn->ndims = ndims;
-    mn->dimsz = (int *) malloc(sizeof(int) * ndims);
-    mn->stride = (int *) malloc(sizeof(int) * ndims);
-    mn->offset = 0;
-    mn->data = NULL;
-
-    int sum_strides = 1;
-
-    // Compute stride as the product of all previus
-    // strides, multiplied by the current dimension.
-    // This is only the initial stride value, and may change
-    // when taking sub matricies.
+    unsigned *dimsz = ndims? (unsigned *) malloc(sizeof(unsigned) * ndims) : NULL;
+    int literal_size = 0;
     for (int i = 0; i < ndims; i++) {
-        mn->dimsz[i] = dims[i];
-        mn->stride[i] = sum_strides;
-        
-        sum_strides *= mn->dimsz[i];
-    }
-    
-    mn->literal_size = sum_strides;
+        if (dims[i] == 0) {
+            free(t);
+            free(dimsz);
 
-    return mn;
+            if (e != NULL) *e = MAT_DIMENSION_ZERO;
+            
+            return NULL;
+        }
+
+        dimsz[i] = dims[i];
+        literal_size *= dims[i];
+    }
+
+    t->dimsz = dimsz;
+    t->literal_size = literal_size;
+    t->data = NULL;
+
+    if (e != NULL) *e = MAT_NO_ERROR;
+
+    return t;
 }
 
 Tensor* matMakeTensorScalar(double s) {
-    Tensor *r = matMakeTensor(1, (int []) { 1 });
+    Tensor *r = matMakeTensor(1, (unsigned []) { 1 }, NULL);
     r->data = (double *) malloc(sizeof(double));
     r->data[0] = s;
 
     return r;
 }
 
-// Get a refrance to the value of a matrix at a given index.
-/*
- * `m` - input matrix.
- * `indecies` - indecies to target value.
- * returns a refrence to the value at indecies given.
- * */
-double* matNAtI(Tensor m, int *indecies) {
-    if (indecies == NULL) return NULL;
-
-    int literal_index = 0;
-    
-    for (int i = 0; i < m.ndims; i++) {
-        // Index out of bounds for given dimension.
-        if (indecies[i] >= m.dimsz[i]) return NULL;
-
-        literal_index += indecies[i] * m.stride[i];
+Tensor* matTensorDeepCopy(Tensor *t, MatrixErr *e) {
+    if (t == NULL) {
+        if (e != NULL) *e = MAT_NULL_PTR;
+        
+        return NULL;
     }
-    
-    return (double *) (m.data + m.offset + literal_index); 
+    Tensor *r = matMakeTensor(t->ndims, t->dimsz, e);
+
+    if (r == NULL) return NULL;
+
+    if (t->data != NULL) memcpy((void *) r->data, (void *) t->data, t->literal_size);
+
+    if (e != NULL) *e = MAT_NO_ERROR;
+
+    return t;
 }
 
-// Return`s the indecies of a literal address for a given matrix.
-/*
- * `m` - input matrix.
- * `literal` - literal index to data. This does include offset.
- * returns array of indecies describing the location in the matrix, or NULL.
- * */
-int* matNIAt(Tensor m, int literal) {
-    // Index out of matrix bounds
-    if (literal > m.literal_size) return NULL;
-
-    int *indecies = (int *) malloc(sizeof(int) * m.ndims);
-    // Account for offset.
-    literal -= m.offset;
-    
-    // Reverse the calculations of computing the literal
-    // index of an index array.
-    for (int i = 0; i < m.ndims; i++) {
-        indecies[i] = (literal / m.stride[i]) % m.dimsz[i];
-        literal -= indecies[i];
-    }
-
-    return indecies;
-}
-
-// Make a sub-matrix out of an n dimensional matrix.
-/*
- * The matrix will be comprised of `width` * `height` elements
- * of the original matrix `m`, starting from offset `start`.
- * `m` - input matrix.
- * `start` - starting offset.
- * `width` - width of resulting matrix.
- * `height` - height of refsulting matrix.
- * returns sub matrix, or NULL if invalid parameters.
- * */
-Matrix2* matTensorSubMatrix2(Tensor m, int *start, int width, int height) {
-    int effective_start = matTPtrAsIndex(m, matNAtI(m, start));
-    
-    // If starting index is not in bounds, or otherwise invalid
-    // by beign NULL, return NULL.
-    if (effective_start == -1) return NULL;
-    // This check is technicaly redundent since `matNAtI` returns NULL
-    // if out of bounds.
-    if (effective_start + width * height > m.literal_size) return NULL;
-
-    Matrix2 *r = matMakeMatrix2(width, height);
-    r->data = (double *) malloc(sizeof(double) * width * height);
-
-    for (int i = 0; i < width * height; i++) {
-        int *indecies = matNIAt(m, effective_start + i);
-        r->data[i] = *matNAtI(m, indecies);
-        free(indecies);
-    }
-
-    return r;
-}
-
-// Get matrix data as contigues array.
-/*
- * Since `MatrixN` is not guarenteed to be contigues,
- * meaning any accsess to it's data requires the use
- * of stride or `matNAtI`, getting the data as a contigues
- * array may be useful when manipulating the entire
- * matrix.
- * `m` - input matrix.
- * returns array of matrix data.
- * */
-double* matTensorContiguousCopy(Tensor m) {
-    double *r = (double *) malloc(sizeof(double) * m.literal_size);
-
-    // Make deep copy linearly.
-    for (int i = 0; i < m.literal_size; i++) {
-        int *indecies = matNIAt(m, i);
-        r[i] = *matNAtI(m, indecies);
-        free(indecies);
+MatrixErr matTensorFit(Tensor *t1, Tensor *t2, Tensor **t1r, Tensor **t2r) {
+    if (t1r == NULL || t2r == NULL) return MAT_NULL_PTR;
+    *t1r = NULL;
+    *t2r = NULL;
+    {
+        MatrixErr err;
+        if (matCheckTensor(t1, &err) != MAT_NO_ERROR) return err;
+        if (matCheckTensor(t2, &err) != MAT_NO_ERROR) return err;
     }
     
-    return r;
-}
-
-// PERF: implement GPU.
-MatrixErr matTensorExtendDim(Tensor t, int dim, int rep, Tensor **r) {
-    if (r == NULL) return MAT_NULL_PTR;
-    *r = NULL;
-    if (dim < 0 || dim >= t.ndims) return MAT_DIMENSION_OUT_OF_RANGE;
+    Tensor *biggest = (t1->ndims > t2->ndims)? t1 : t2;
+    unsigned *t1_dims = (unsigned *) malloc(sizeof(unsigned) * biggest->ndims);
+    unsigned *t2_dims = (unsigned *) malloc(sizeof(unsigned) * biggest->ndims);
     
-    int *dims = (int *) malloc(sizeof(int) * t.ndims);
-    for (int i = 0; i < t.ndims; i++) 
-        if (i != dim) dims[i] = t.dimsz[i];
-        else dims[i] = t.dimsz[i] * rep;
-    Tensor *res = matMakeTensor(t.ndims, dims);
-    res->data = (double *) malloc(sizeof(double) * res->literal_size);
-
-    for (int i = 0; i < res->literal_size; i++) {
-        int *ind = matNIAt(*res, i);
-        if (ind[dim] >= t.dimsz[dim]) {
-            double *r_dest = matNAtI(*res, ind);
-            ind[dim] %= t.dimsz[dim];
-            *r_dest = *matNAtI(t, ind);
-        } else *matNAtI(*res, ind) = *matNAtI(t, ind);
-
-        free(ind);
+    for (int i = 0; i < t1->ndims; i++) {
+        if (t1->dimsz[i] != 1) 
+            t1_dims[i] = t1->dimsz[i];
+        else if (i < t2->ndims)
+            t1_dims[i] = t2->dimsz[i];
+        else
+            t1_dims[i] = 1;
+    }
+    for (int i = 0; i < t2->ndims; i++) {
+        if (t2->dimsz[i] != 1) 
+            t2_dims[i] = t2->dimsz[i];
+        else if (i < t1->ndims)
+            t2_dims[i] = t1->dimsz[i];
+        else
+            t2_dims[i] = 1;
     }
 
-    *r = res;
+    for (int i = 0; i < biggest->ndims; i++) {
+        if (t1_dims[i] != t2_dims[i]) {
+            free(t1_dims);
+            free(t2_dims);
+
+            return MAT_UNFIT_TENSORS;
+        }
+    }
+
+    Tensor *t1_res = (Tensor *) malloc(sizeof(Tensor));
+    t1_res->ndims = biggest->ndims;
+    t1_res->literal_size = t1->literal_size;
+    t1_res->dimsz = t1_dims;
+    t1_res->odimsz = t1->dimsz;
+    t1_res->ndimso = t1->ndims;
+    t1_res->data = t1->data;
+    
+    Tensor *t2_res = (Tensor *) malloc(sizeof(Tensor));
+    t2_res->ndims = biggest->ndims;
+    t2_res->literal_size = t2->literal_size;
+    t2_res->dimsz = t2_dims;
+    t2_res->odimsz = t2->dimsz;
+    t2_res->ndimso = t2->ndims;
+    t2_res->data = t2->data;
+
+    *t1r = t1_res;
+    *t2r = t2_res;
 
     return MAT_NO_ERROR;
+}
+
+// Get a refrance to the value of a matrix at a given index.
+double* matTensorAtI(Tensor *t, unsigned *ind, MatrixErr *e) {
+    {
+        MatrixErr err;
+        if (matCheckTensor(t, &err) != MAT_NO_ERROR) {
+            if (e != NULL) *e = err;
+            return NULL;
+        }
+    }
+
+    double *r = t->data;
+
+    for (int i = 0; i < t->ndims; i++) {
+        if (t->odimsz != NULL && (i > t->ndimso || t->dimsz[i] > t->odimsz[i]))
+            r += sizeof(double) * (t->dimsz[i] % t->odimsz[i]);
+        else r += sizeof(double) * t->dimsz[i];
+    }
+
+    if (e != NULL) *e = MAT_NO_ERROR;
+    return r;
+}
+
+unsigned *matTensorIAt(Tensor *t, int literal, MatrixErr *e) {
+    {
+        MatrixErr err;
+        if (matCheckTensor(t, &err) != MAT_NO_ERROR) {
+            if (e != NULL) *e = err;
+            return NULL;
+        }
+
+        if (literal >= t->literal_size) {
+            if (e != NULL) *e = err;
+            return NULL;
+        }
+    }
+
+    unsigned *ind = (unsigned *) malloc(sizeof(unsigned) * t->ndims);
+    for (int i = 0; i < t->ndims; i++) {
+        ind[i] = (literal / t->dimsz[i]) % t->dimsz[i];
+        literal -= ind[i];
+    }
+
+    if (e != NULL) *e = MAT_NO_ERROR;
+    return ind;
 }
 
 // PERF: implement GPU.
@@ -227,7 +191,7 @@ MatrixErr matTensorExtendDim(Tensor t, int dim, int rep, Tensor **r) {
 // second tensor. Sum their product.
 // The result is sized t1.dims[1:end]t2.dims[0,2:end]. 
 // If the resulting dimension is 0 than a scalar is returned.
-MatrixErr matDot(Tensor t1, Tensor t2, Tensor **r) {
+/*MatrixErr matDot(Tensor t1, Tensor t2, Tensor **r) {
     if (r == NULL) return MAT_NULL_PTR;
     *r = NULL;
     Tensor *new_t1 = matTensorReduce(t1);
@@ -511,5 +475,5 @@ Tensor* matTTensor(Tensor m) {
     }
 
     return res;
-}
+}*/
 

@@ -47,6 +47,11 @@ typedef enum {
 } MatrixErr;
 
 MatrixErr matInit();
+Tensor* matMakeTensor(unsigned ndims, unsigned *dims, MatrixErr *e);
+Tensor* matTensorDeepCopy(Tensor *t, MatrixErr *e);
+MatrixErr matTensorFit(Tensor *t1, Tensor *t2, Tensor **t1r, Tensor **t2r);
+double* matTensorAtI(Tensor *t, unsigned *ind, MatrixErr *e);
+unsigned *matTensorIAt(Tensor *t, int literal, MatrixErr *e);
 
 static const char* matGetErrorString(MatrixErr error) {
     switch (error) {
@@ -71,38 +76,6 @@ static const char* matGetErrorString(MatrixErr error) {
  * */
 static inline cl_int matGetExtendedError() {
     return claGetExtendedError();
-}
-
-static Tensor* matMakeTensor(unsigned ndims, unsigned *dims, MatrixErr *e) {
-    Tensor *t = (Tensor *) malloc(sizeof(Tensor));
-    
-    t->ndims = ndims;
-    t->ndimso = ndims;
-    t->odimsz = NULL;
-
-    unsigned *dimsz = ndims? (unsigned *) malloc(sizeof(unsigned) * ndims) : NULL;
-    int literal_size = 0;
-    for (int i = 0; i < ndims; i++) {
-        if (dims[i] == 0) {
-            free(t);
-            free(dimsz);
-
-            if (e != NULL) *e = MAT_DIMENSION_ZERO;
-            
-            return NULL;
-        }
-
-        dimsz[i] = dims[i];
-        literal_size *= dims[i];
-    }
-
-    t->dimsz = dimsz;
-    t->literal_size = literal_size;
-    t->data = NULL;
-
-    if (e != NULL) *e = MAT_NO_ERROR;
-
-    return t;
 }
 
 static void matFreeTensor(Tensor **t) {
@@ -131,114 +104,12 @@ static MatrixErr matCheckTensor(Tensor *t, MatrixErr *e) {
     return error;
 }
 
-static Tensor* matMakeScalar(double s, MatrixErr *e) {
+static inline Tensor* matMakeScalar(double s, MatrixErr *e) {
     Tensor *t = matMakeTensor(0, NULL, e);
     // NOTE: Redundent if.
     if (t != NULL) t->data[0] = s;
     
     return t;
-}
-
-static Tensor* matTensorDeepCopy(Tensor *t, MatrixErr *e) {
-    if (t == NULL) {
-        if (e != NULL) *e = MAT_NULL_PTR;
-        
-        return NULL;
-    }
-    Tensor *r = matMakeTensor(t->ndims, t->dimsz, e);
-
-    if (r == NULL) return NULL;
-
-    if (t->data != NULL) memcpy((void *) r->data, (void *) t->data, t->literal_size);
-
-    if (e != NULL) *e = MAT_NO_ERROR;
-
-    return t;
-}
-
-static MatrixErr matTensorFit(Tensor *t1, Tensor *t2, Tensor **t1r, Tensor **t2r) {
-    if (t1r == NULL || t2r == NULL) return MAT_NULL_PTR;
-    *t1r = NULL;
-    *t2r = NULL;
-    {
-        MatrixErr err;
-        if (matCheckTensor(t1, &err) != MAT_NO_ERROR) return err;
-        if (matCheckTensor(t2, &err) != MAT_NO_ERROR) return err;
-    }
-    
-    Tensor *biggest = (t1->ndims > t2->ndims)? t1 : t2;
-    unsigned *t1_dims = (unsigned *) malloc(sizeof(unsigned) * biggest->ndims);
-    unsigned *t2_dims = (unsigned *) malloc(sizeof(unsigned) * biggest->ndims);
-    
-    for (int i = 0; i < t1->ndims; i++) {
-        if (t1->dimsz[i] != 1) 
-            t1_dims[i] = t1->dimsz[i];
-        else if (i < t2->ndims)
-            t1_dims[i] = t2->dimsz[i];
-        else
-            t1_dims[i] = 1;
-    }
-    for (int i = 0; i < t2->ndims; i++) {
-        if (t2->dimsz[i] != 1) 
-            t2_dims[i] = t2->dimsz[i];
-        else if (i < t1->ndims)
-            t2_dims[i] = t1->dimsz[i];
-        else
-            t2_dims[i] = 1;
-    }
-
-    for (int i = 0; i < biggest->ndims; i++) {
-        if (t1_dims[i] != t2_dims[i]) {
-            free(t1_dims);
-            free(t2_dims);
-
-            return MAT_UNFIT_TENSORS;
-        }
-    }
-
-    Tensor *t1_res = (Tensor *) malloc(sizeof(Tensor));
-    t1_res->ndims = biggest->ndims;
-    t1_res->literal_size = t1->literal_size;
-    t1_res->dimsz = t1_dims;
-    t1_res->odimsz = t1->dimsz;
-    t1_res->ndimso = t1->ndims;
-    t1_res->data = t1->data;
-    
-    Tensor *t2_res = (Tensor *) malloc(sizeof(Tensor));
-    t2_res->ndims = biggest->ndims;
-    t2_res->literal_size = t2->literal_size;
-    t2_res->dimsz = t2_dims;
-    t2_res->odimsz = t2->dimsz;
-    t2_res->ndimso = t2->ndims;
-    t2_res->data = t2->data;
-
-    *t1r = t1_res;
-    *t2r = t2_res;
-
-    return MAT_NO_ERROR;
-}
-
-static double* matTensorAtI(Tensor *t, unsigned *ind, MatrixErr *e) {
-    {
-        MatrixErr err;
-        if (matCheckTensor(t, &err) != MAT_NO_ERROR) {
-            if (e != NULL) *e = err;
-            
-            return NULL;
-        }
-    }
-
-    double *r = t->data;
-
-    for (int i = 0; i < t->ndims; i++) {
-        if (t->odimsz != NULL && (i > t->ndimso || t->dimsz[i] > t->odimsz[i]))
-            r += sizeof(double) * (t->dimsz[i] % t->odimsz[i]);
-        else r += sizeof(double) * t->dimsz[i];
-    }
-
-    if (e != NULL) *e = MAT_NO_ERROR;
-
-    return r;
 }
 
 #endif
