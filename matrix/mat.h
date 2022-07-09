@@ -56,6 +56,8 @@ unsigned *matTensorIAt(Tensor *t, int literal, MatrixErr *e);
 MatrixErr matTensorFit(Tensor *t1, Tensor *t2, Tensor **t1r, Tensor **t2r);
 void matTensorPrint(Tensor *t);
 
+MatrixErr matDot(Tensor *t1, Tensor *t2, Tensor **r);
+
 static const char* matGetErrorString(MatrixErr error) {
     switch (error) {
         case MAT_NO_ERROR: return "MAT_NO_ERROR";

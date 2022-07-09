@@ -12,7 +12,7 @@ MatrixErr matInit() {
     // Source code defined in "acceleration/kernels/static_kernels_src.h"
     const char *src_kernel = KERNEL_STATIC_SOURCE_MAT_CL;
     
-    claRegisterFromSrc(&src_kernel, 6, "matmul", "matadd", "matsub", "matt", "matmuls", "matadds");
+    claRegisterFromSrc(&src_kernel, 6, "matmul", "matadd", "matsub", "matdott", "matmuls", "matadds");
     if (claGetError()) return MAT_INITIALIZATION_FAILED;
     
     matinit = true;
@@ -232,6 +232,7 @@ unsigned* matTensorIAt(Tensor *t, int literal, MatrixErr *e) {
     }
 
     unsigned *ind = (unsigned *) malloc(sizeof(unsigned) * t->ndims);
+    // FIXME: ind[i] = (literal / t->stride[i]) % t->dimsz[i]
     for (int i = 0; i < t->ndims; i++) {
         ind[i] = (literal / t->dimsz[i]) % t->dimsz[i];
         literal -= ind[i];
@@ -239,6 +240,41 @@ unsigned* matTensorIAt(Tensor *t, int literal, MatrixErr *e) {
 
     if (e != NULL) *e = MAT_NO_ERROR;
     return ind;
+}
+
+MatrixErr matDot(Tensor *t1, Tensor *t2, Tensor **r) {
+    if (r == NULL) return MAT_NULL_PTR;
+    *r = NULL;
+    {
+        MatrixErr err;
+        if (matCheckTensor(t1, &err) != MAT_NO_ERROR) return err;
+        if (matCheckTensor(t2, &err) != MAT_NO_ERROR) return err;
+    }
+
+    Tensor *new_t1;
+    Tensor *new_t2;
+    if (matTensorFit(t1, t2, &new_t1, &new_t2)) return MAT_UNFIT_TENSORS;
+
+    // Standard kernel call in OCLAPI.
+    unsigned *rdimsz = (unsigned *) malloc(sizeof(unsigned) * t1->ndims);
+    for (int i = 0; i < t2->ndims; i++) 
+        rdimsz[i] = t2->dimsz[i];
+    rdimsz[0] = t1->dimsz[0];
+
+    *r = matMakeTensor(t1->ndims, rdimsz, NULL);
+    Tensor *res = *r;
+    res->data = (double *) malloc(sizeof(double) * res->literal_size);
+
+    size_t gz[] = { res->literal_size };
+    claRunKernel("matdott", 1, gz, NULL,
+                 new_t1->data, new_t1->literal_size, OCLREAD | OCLCPY,
+                 new_t2->data, new_t2->literal_size, OCLREAD | OCLCPY,
+                 new_t1->dimsz[0], new_t2->dimsz[0],
+                 res->data, res->literal_size, OCLWRITE | OCLOUT,
+                 res->dimsz, res->ndims, OCLREAD | OCLCPY);
+    if (claGetError()) return MAT_KERNEL_FAILURE;
+
+    return MAT_NO_ERROR;
 }
 
 // PERF: implement GPU.
@@ -291,6 +327,7 @@ unsigned* matTensorIAt(Tensor *t, int literal, MatrixErr *e) {
             }
         }
     }
+
     Tensor *res = matMakeTensor(res_ndims, res_dims);
     res->data = (double *) malloc(sizeof(double) * res->literal_size);
     if (res_dims != t1.dimsz && res_dims != t2.dimsz) free(res_dims);

@@ -28,6 +28,27 @@ void sumArray(__local double **tmp, int bsize, int li) {
     barrier(CLK_LOCAL_MEM_FENCE);
 }
 
+// adimsz = adimsz[0], bdimsz = bdimsz[0]
+__kernel void matdott(__global double *a, __global double *b, unsigned adimsz, unsigned bdimsz, __global double *r, __global unsigned *rdimsz) {
+    // TODO: Support for fitted tensors
+    int gi = get_global_id(0);
+
+    int a_stride = 1;
+    int b_stride = bdimsz;
+
+    int offseta = gi - (gi % rdimsz[0]);
+    // gi ecluding first dimension index
+    int offsetb = gi - ((offseta / rdimsz[1]) % rdimsz[1]) * rdimsz[1];
+
+    // assert(bdimsz[1] == adimsz[0])
+    int iter = adimsz;
+
+    r[gi] = 0;
+    for (int i = 0; i < iter; i++) {
+        r[gi] += a[offseta + i * a_stride] * b[offsetb + i * b_stride];
+    }
+}
+
 __kernel void matmul(__global double *a, __global double *b, unsigned int bw, unsigned int com, __global double *res) {
     int gw = get_global_id(0);
     int gh = get_global_id(1);

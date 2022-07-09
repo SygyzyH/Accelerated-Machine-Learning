@@ -17,52 +17,20 @@ int main() {
 
     error = matInit();
 
-    Tensor *t = matMakeTensor(2, (unsigned []) { 2, 2 }, (MatrixErr *) &error);
-    t->data = (double *) malloc(sizeof(double) * t->literal_size);
-    for (int i = 0; i < t->literal_size; i++) t->data[i] = i;
-    matTensorPrint(t);
+    Tensor *t1 = matMakeTensor(3, (unsigned []) { 3, 3, 3 }, (MatrixErr *) &error);
+    t1->data = (double *) malloc(sizeof(double) * t1->literal_size);
+    for (int i = 0; i < t1->literal_size; i++) t1->data[i] = i;
+    matTensorPrint(t1);
 
-/*    Matrix2 *l1w = matMakeMatrix2(2, 2);
-    Matrix2 *l2w = matMakeMatrix2(1, 2);
-    l1w->data = (double []) { 0.11, 0.12, 0.21, 0.08 };
-    l2w->data = (double []) { 0.14, 0.15 };
+    Tensor *t2 = matMakeTensor(3, (unsigned []) { 3, 3, 3 }, (MatrixErr *) &error);
+    t2->data = (double *) malloc(sizeof(double) * t2->literal_size);
+    for (int i = 0; i < t2->literal_size; i++) t2->data[i] = i;
+    matTensorPrint(t2);
 
-    Machine m = mlMakeMachine(4, (Layer* []) { 
-                      mlMakeLayer(FullyConnected, NULL, matTensorAsMatrix2(*mlWeightInitializer(ML_WEIGHT_INITIALIZER_GLOROT, 2, (int []) { 2, 2 }), 2, 2)),
-                      mlMakeLayer(FullyConnected, NULL, matTensorAsMatrix2(*mlWeightInitializer(ML_WEIGHT_INITIALIZER_GLOROT, 2, (int []) { 1, 2 }), 1, 2)),
-                      mlMakeLayer(Bias, NULL, mlWeightInitializer(ML_WEIGHT_INITIALIZER_ZEROS, 1, (int []) { 1 })),
-                      mlMakeLayer(MeanSquaredError, NULL, NULL)
-                });
+    Tensor *r;
+    matDot(t1, t2, &r);
+    matTensorPrint(r);
 
-    Tensor *inp = matMakeTensor(1, (int []) { 2 });
-    inp->data = (double []) { 2, 3 };
-
-    Tensor *out = NULL;
-
-    puts("Feed forward");
-    error = mlMachineFeedForward(m, inp, &out);
-
-    assert(out != NULL);
-    matPrintTensor(*out);
-
-    Tensor *desired_output = matMakeTensorScalar(1);
-
-    double learning_rate = 0.05;
-    LearningInstance *inst = mlMakeLearningInstance(m, (void *) &learning_rate, 1, inp, desired_output, SGD);
-    assert(inst != NULL);
-    puts("Training");
-    
-    const int training_rep = 60;
-    for (int i = 0; i < training_rep; i++) error = mlTrainInstance(inst);
-
-    printf("training error: %s\n", mlGetErrorString(error));
-
-    Tensor *o2 = NULL;
-    mlMachineFeedForward(m, inp, &o2);
-
-    assert(o2 != NULL);
-    matPrintTensor(*o2);*/
- 
     claCln();
     
     return 0;
