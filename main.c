@@ -27,8 +27,11 @@ int main() {
     for (int i = 0; i < t2->literal_size; i++) t2->data[i] = i;
     matTensorPrint(t2);
 
+    Tensor *c = matMakeScalar(20, (MatrixErr *) &error);
+    matTensorPrint(c);
+
     Tensor *r;
-    matDot(t1, t2, &r);
+    matProd(t1, c, &r);
     matTensorPrint(r);
 
     claCln();

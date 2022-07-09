@@ -21,11 +21,6 @@
 // Guarenteed to be contigues
 // ndims = 0 => scalar.
 typedef struct {
-    // Number of dimensions.
-    unsigned ndimso;
-    // Original dimsz. Used to keep track of changes when tensor is extended.
-    unsigned *odimsz;
-    // Current dimsz.
     unsigned *dimsz;
     unsigned ndims;
 
@@ -56,7 +51,8 @@ unsigned *matTensorIAt(Tensor *t, int literal, MatrixErr *e);
 MatrixErr matTensorFit(Tensor *t1, Tensor *t2, Tensor **t1r, Tensor **t2r);
 void matTensorPrint(Tensor *t);
 
-MatrixErr matDot(Tensor *t1, Tensor *t2, Tensor **r);
+MatrixErr matProd(Tensor *t1, Tensor *t2, Tensor **r);
+MatrixErr matMult(Tensor *t1, Tensor *t2, Tensor **r);
 
 static const char* matGetErrorString(MatrixErr error) {
     switch (error) {
@@ -90,7 +86,6 @@ static void matFreeTensor(Tensor **t) {
     if (t_d != NULL) {
         free(t_d->data);
         free(t_d->dimsz);
-        free(t_d->odimsz);
     }
 
     free(*t);
@@ -112,7 +107,12 @@ static MatrixErr matCheckTensor(Tensor *t, MatrixErr *e) {
 static inline Tensor* matMakeScalar(double s, MatrixErr *e) {
     Tensor *t = matMakeTensor(0, NULL, e);
     // NOTE: Redundent if.
-    if (t != NULL) t->data[0] = s;
+    if (t != NULL) {
+        t->dimsz = (unsigned *) malloc(sizeof(unsigned));
+        t->data = (double *) malloc(sizeof(double));
+        t->data[0] = s;
+        t->dimsz[0] = 1;
+    }
     
     return t;
 }

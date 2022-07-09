@@ -3,6 +3,10 @@
 #include <acceleration/kernels/static_kernels_src.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
+
+#define MAX(a, b) (((a) > (b))? (a) : (b))
+#define MIN(a, b) (((a) < (b))? (a) : (b))
 
 bool matinit = false;
 
@@ -12,7 +16,7 @@ MatrixErr matInit() {
     // Source code defined in "acceleration/kernels/static_kernels_src.h"
     const char *src_kernel = KERNEL_STATIC_SOURCE_MAT_CL;
     
-    claRegisterFromSrc(&src_kernel, 6, "matmul", "matadd", "matsub", "matdott", "matmuls", "matadds");
+    claRegisterFromSrc(&src_kernel, 4, "matmul", "matadd", "matsub", "matprod");
     if (claGetError()) return MAT_INITIALIZATION_FAILED;
     
     matinit = true;
@@ -24,8 +28,6 @@ Tensor* matMakeTensor(unsigned ndims, unsigned *dims, MatrixErr *e) {
     Tensor *t = (Tensor *) malloc(sizeof(Tensor));
     
     t->ndims = ndims;
-    t->ndimso = ndims;
-    t->odimsz = NULL;
 
     unsigned *dimsz = ndims? (unsigned *) malloc(sizeof(unsigned) * ndims) : NULL;
     int literal_size = 1;
@@ -107,8 +109,11 @@ void matTensorPrint(Tensor *t) {
         }
     }
 
-    for (int i = 0; i < t->ndims - 1; i++) printf("%dx", t->dimsz[i]);
-    printf("%d\n", t->dimsz[t->ndims - 1]);
+    if (t->ndims == 0) printf("1\n");
+    else {
+        for (int i = 0; i < t->ndims - 1; i++) printf("%dx", t->dimsz[i]);
+        printf("%d\n", t->dimsz[t->ndims - 1]);
+    }
 }
 
 Tensor* matTensorDeepCopy(Tensor *t, MatrixErr *e) {
@@ -142,25 +147,26 @@ MatrixErr matTensorFit(Tensor *t1, Tensor *t2, Tensor **t1r, Tensor **t2r) {
     unsigned *t1_dims = (unsigned *) malloc(sizeof(unsigned) * biggest->ndims);
     unsigned *t2_dims = (unsigned *) malloc(sizeof(unsigned) * biggest->ndims);
     
-    for (int i = 0; i < t1->ndims; i++) {
-        if (t1->dimsz[i] != 1) 
-            t1_dims[i] = t1->dimsz[i];
-        else if (i < t2->ndims)
-            t1_dims[i] = t2->dimsz[i];
-        else
-            t1_dims[i] = 1;
-    }
-    for (int i = 0; i < t2->ndims; i++) {
-        if (t2->dimsz[i] != 1) 
-            t2_dims[i] = t2->dimsz[i];
-        else if (i < t1->ndims)
-            t2_dims[i] = t1->dimsz[i];
-        else
-            t2_dims[i] = 1;
+    for (int i = 0; i < biggest->ndims; i++) {
+        if (i < t1->ndims) {
+            if (t1->dimsz[i] != 1)
+                t1_dims[i] = t1->dimsz[i];
+            else
+                t1_dims[i] = t2->dimsz[i];
+        } else t1_dims[i] = t1->dimsz[i];
     }
 
     for (int i = 0; i < biggest->ndims; i++) {
-        if (t1_dims[i] != t2_dims[i]) {
+        if (i < t2->ndims) {
+            if (t2->dimsz[i] != 1)
+                t2_dims[i] = t2->dimsz[i];
+            else 
+                t2_dims[i] = t1->dimsz[i];
+        } else t2_dims[i] = t1->dimsz[i];
+    }
+
+    for (int i = 0; i < biggest->ndims; i++) {
+        if (t1_dims[i] != t2_dims[i] && t1_dims[i] != 1 && t2_dims[i] != 1) {
             free(t1_dims);
             free(t2_dims);
 
@@ -168,24 +174,46 @@ MatrixErr matTensorFit(Tensor *t1, Tensor *t2, Tensor **t1r, Tensor **t2r) {
         }
     }
 
-    Tensor *t1_res = (Tensor *) malloc(sizeof(Tensor));
-    t1_res->ndims = biggest->ndims;
-    t1_res->literal_size = t1->literal_size;
-    t1_res->dimsz = t1_dims;
-    t1_res->odimsz = t1->dimsz;
-    t1_res->ndimso = t1->ndims;
-    t1_res->data = t1->data;
+    Tensor *t1_res = matMakeTensor(biggest->ndims, t1_dims, NULL);
+    t1_res->data = (double *) malloc(sizeof(double) * t1_res->literal_size);
+
+    for (int i = 0; i < t1_res->literal_size; i++) {
+        unsigned *ind = matTensorIAt(t1_res, i, NULL);
+        unsigned *ind_org = (unsigned *) malloc(sizeof(unsigned) * t1->ndims);
+        memcpy(ind_org, ind, sizeof(unsigned) * t1->ndims);
+        
+        for (int sind = 0; sind < t1->ndims; sind++) 
+            if (ind[sind] >= t1->dimsz[sind])
+                ind_org[sind] %= t1->dimsz[sind];
+        
+        *matTensorAtI(t1_res, ind, NULL) = *matTensorAtI(t1, ind_org, NULL);
+
+        free(ind);
+        free(ind_org);
+    }
     
-    Tensor *t2_res = (Tensor *) malloc(sizeof(Tensor));
-    t2_res->ndims = biggest->ndims;
-    t2_res->literal_size = t2->literal_size;
-    t2_res->dimsz = t2_dims;
-    t2_res->odimsz = t2->dimsz;
-    t2_res->ndimso = t2->ndims;
-    t2_res->data = t2->data;
+    Tensor *t2_res = matMakeTensor(biggest->ndims, t2_dims, NULL);
+    t2_res->data = (double *) malloc(sizeof(double) * t2_res->literal_size);
+
+    for (int i = 0; i < t2_res->literal_size; i++) {
+        unsigned *ind = matTensorIAt(t2_res, i, NULL);
+        unsigned *ind_org = (unsigned *) malloc(sizeof(unsigned) * t2->ndims);
+        memcpy(ind_org, ind, sizeof(unsigned) * t2->ndims);
+        
+        for (int sind = 0; sind < t2->ndims; sind++) 
+            if (ind[sind] >= t2->dimsz[sind])
+                ind_org[sind] = ind[sind] % t2->dimsz[sind];
+ 
+        *matTensorAtI(t2_res, ind, NULL) = *matTensorAtI(t2, ind_org, NULL);
+
+        free(ind);
+        free(ind_org);
+    }
 
     *t1r = t1_res;
     *t2r = t2_res;
+
+    matTensorPrint(t2_res);
 
     return MAT_NO_ERROR;
 }
@@ -204,13 +232,8 @@ double* matTensorAtI(Tensor *t, unsigned *ind, MatrixErr *e) {
     int mult = 1;
 
     for (int i = 0; i < t->ndims; i++) {
-        if (t->odimsz != NULL && (i > t->ndimso || t->dimsz[i] > t->odimsz[i])) {
-            r += (ind[i] * mult) % t->odimsz[i];
-            mult *= t->odimsz[i];
-        } else {
-            r += ind[i] * mult;
-            mult *= t->dimsz[i];
-        }
+        r += ind[i] * mult;
+        mult *= t->dimsz[i];
     }
 
     if (e != NULL) *e = MAT_NO_ERROR;
@@ -232,9 +255,10 @@ unsigned* matTensorIAt(Tensor *t, int literal, MatrixErr *e) {
     }
 
     unsigned *ind = (unsigned *) malloc(sizeof(unsigned) * t->ndims);
-    // FIXME: ind[i] = (literal / t->stride[i]) % t->dimsz[i]
+    int stride = 1;
     for (int i = 0; i < t->ndims; i++) {
-        ind[i] = (literal / t->dimsz[i]) % t->dimsz[i];
+        ind[i] = (literal / stride) % t->dimsz[i];
+        stride *= t->dimsz[i];
         literal -= ind[i];
     }
 
@@ -242,7 +266,7 @@ unsigned* matTensorIAt(Tensor *t, int literal, MatrixErr *e) {
     return ind;
 }
 
-MatrixErr matDot(Tensor *t1, Tensor *t2, Tensor **r) {
+MatrixErr matProd(Tensor *t1, Tensor *t2, Tensor **r) {
     if (r == NULL) return MAT_NULL_PTR;
     *r = NULL;
     {
@@ -256,17 +280,17 @@ MatrixErr matDot(Tensor *t1, Tensor *t2, Tensor **r) {
     if (matTensorFit(t1, t2, &new_t1, &new_t2)) return MAT_UNFIT_TENSORS;
 
     // Standard kernel call in OCLAPI.
-    unsigned *rdimsz = (unsigned *) malloc(sizeof(unsigned) * t1->ndims);
-    for (int i = 0; i < t2->ndims; i++) 
-        rdimsz[i] = t2->dimsz[i];
-    rdimsz[0] = t1->dimsz[0];
+    unsigned *rdimsz = (unsigned *) malloc(sizeof(unsigned) * new_t1->ndims);
+    for (int i = 0; i < new_t2->ndims; i++) 
+        rdimsz[i] = new_t2->dimsz[i];
+    rdimsz[0] = new_t1->dimsz[0];
 
-    *r = matMakeTensor(t1->ndims, rdimsz, NULL);
+    *r = matMakeTensor(new_t1->ndims, rdimsz, NULL);
     Tensor *res = *r;
     res->data = (double *) malloc(sizeof(double) * res->literal_size);
 
     size_t gz[] = { res->literal_size };
-    claRunKernel("matdott", 1, gz, NULL,
+    claRunKernel("matprod", 1, gz, NULL,
                  new_t1->data, new_t1->literal_size, OCLREAD | OCLCPY,
                  new_t2->data, new_t2->literal_size, OCLREAD | OCLCPY,
                  new_t1->dimsz[0], new_t2->dimsz[0],
@@ -277,296 +301,49 @@ MatrixErr matDot(Tensor *t1, Tensor *t2, Tensor **r) {
     return MAT_NO_ERROR;
 }
 
-// PERF: implement GPU.
-// Standardized mul operator for any two tensors.
-// Iterate over the first dimension of the first tensor and the second dimension of the
-// second tensor. Sum their product.
-// The result is sized t1.dims[1:end]t2.dims[0,2:end]. 
-// If the resulting dimension is 0 than a scalar is returned.
-/*MatrixErr matDot(Tensor t1, Tensor t2, Tensor **r) {
+MatrixErr matMult(Tensor *t1, Tensor *t2, Tensor **r) {
     if (r == NULL) return MAT_NULL_PTR;
     *r = NULL;
-    Tensor *new_t1 = matTensorReduce(t1);
-    Tensor *new_t2 = matTensorReduce(t2);
-    t1 = *new_t1;
-    t2 = *new_t2;
-    int t2_second_dim = (t2.ndims < 2)? 0 : 1;
-    if (!matTensorIsScalar(t1) && !matTensorIsScalar(t2)) {
-        if (t1.dimsz[0] != t2.dimsz[t2_second_dim]) {
-            freeTensor(new_t1);
-            freeTensor(new_t2);
-            return MAT_DIMENSION_MISTMATCH;
-        }
+    {
+        MatrixErr err;
+        if (matCheckTensor(t1, &err) != MAT_NO_ERROR) return err;
+        if (matCheckTensor(t2, &err) != MAT_NO_ERROR) return err;
     }
-
-    int res_ndims;
-    int *res_dims = NULL;
-    if (matTensorIsScalar(t1)) {
-        res_ndims = t2.ndims;
-        res_dims = t2.dimsz;
-    } else if (matTensorIsScalar(t2)) {
-        res_ndims = t1.ndims;
-        res_dims = t1.dimsz;
-    } else {
-        res_ndims = t1.ndims + t2.ndims - 2;
-        if (res_ndims == 0) {
-            res_ndims = 1;
-            res_dims = (int *) malloc(sizeof(int) * res_ndims);
-            res_dims[0] = 1;
-        } else {
-            res_dims = (int *) malloc(sizeof(int) * res_ndims);
-            for (int i = 0; i < res_ndims; i++) {
-                if (i + 1 < t1.ndims)
-                    res_dims[i] = t1.dimsz[i + 1];
-                else {
-                    int t2_corrected_i = i - t1.ndims + 1;
-                    if (t2_corrected_i < t2_second_dim)
-                        res_dims[i] = t2.dimsz[t2_corrected_i];
-                    else res_dims[i] = t2.dimsz[t2_corrected_i + 1];
-                }
-            }
-        }
-    }
-
-    Tensor *res = matMakeTensor(res_ndims, res_dims);
-    res->data = (double *) malloc(sizeof(double) * res->literal_size);
-    if (res_dims != t1.dimsz && res_dims != t2.dimsz) free(res_dims);
-    res_dims = NULL;
-    
-    int *t1_ind = calloc(t1.ndims, sizeof(int));
-    int *t2_ind = calloc(t2.ndims, sizeof(int));
-
-    for (int i = 0; i < res->literal_size; i++) {
-        double sum = 0;
-        for (int com_dimsz = 0; com_dimsz < t1.dimsz[0] && com_dimsz < t2.dimsz[t2_second_dim]; com_dimsz++) {
-            double *t1_p = matNAtI(t1, t1_ind);
-            double *t2_p = matNAtI(t2, t2_ind);
-            sum += *t1_p * *t2_p;
-
-            t1_ind[0]++;
-            if (t1_ind[0] > t1.dimsz[0]) t1_ind[0] = 0;
-            t2_ind[t2_second_dim]++;
-            if (t2_ind[t2_second_dim] > t2.dimsz[t2_second_dim]) t2_ind[t2_second_dim] = 0;
-        } 
-
-        int *res_ind = matNIAt(*res, i);
-        *matNAtI(*res, res_ind) = sum;
-        free(res_ind);
-        
-        for (int ndims = 0; ndims < t2.ndims; ndims++) {
-            if (t2_ind[ndims] >= t2.dimsz[ndims]) {
-                t2_ind[ndims] = 0;
-                if (t2_second_dim && ndims == t2_second_dim) {
-                    t2_ind[ndims - 1]++;
-                    if (t2_ind[ndims - 1] >= t2.dimsz[ndims - 1]) {
-                        t2_ind[ndims - 1] = 0;
-                        t2_ind[ndims + 1]++;
-                    }
-                } else if (ndims < t2.ndims - 1) t2_ind[ndims + 1]++;
-            }
-        }
-        int final_dim = 1;
-        for (int ndims = 0; ndims < t2.ndims; ndims++) if (t2_ind[ndims] != 0) final_dim = 0;
-        if (!final_dim) t1_ind[0] = 0;
-
-        for (int ndims = 0; ndims < t1.ndims; ndims++) {
-            if (t1_ind[ndims] >= t1.dimsz[ndims]) {
-                t1_ind[ndims] = 0;
-                if (ndims < t1.ndims - 1) t1_ind[ndims + 1]++;
-            }
-        }
-    }
-
-    free(t1_ind);
-    free(t2_ind);
-
-    freeTensor(new_t1);
-    freeTensor(new_t2);
-    
-    *r = res;
-
-    return MAT_NO_ERROR;
-}
-
-// PERF: implement GPU.
-MatrixErr matSubT(Tensor t1, Tensor t2, Tensor **r) {
-    if (r == NULL) return MAT_NULL_PTR;
-    *r = NULL;
 
     Tensor *new_t1;
     Tensor *new_t2;
-    MatrixErr error = matTensorFit(t1, t2, &new_t1, &new_t2);
+    if (matTensorFit(t1, t2, &new_t1, &new_t2)) return MAT_UNFIT_TENSORS;
 
-    if (error != MAT_NO_ERROR) {
-        freeTensor(new_t1);
-        freeTensor(new_t2);
-
-        return error;
-    }
-
-    Tensor *res = matMakeTensor(new_t1->ndims, new_t1->dimsz);
-    res->data = (double *) malloc(sizeof(double) * res->literal_size);
-
-    for (int i = 0; i < new_t1->literal_size; i++) {
-        int *ind1 = matNIAt(*new_t1, i);
-        int *ind2 = matNIAt(*new_t2, i);
-        int *indr = matNIAt(*res, i);
-
-        *matNAtI(*res, indr) = *matNAtI(*new_t1, ind1) - *matNAtI(*new_t2, ind2);
-    }
-
-    *r = res;
-
-    return MAT_NO_ERROR;
-}
-
-// PERF: implement GPU.
-MatrixErr matAddT(Tensor t1, Tensor t2, Tensor **r) {
-    if (r == NULL) return MAT_NULL_PTR;
-    *r = NULL;
-
-    Tensor *new_t1;
-    Tensor *new_t2;
-    MatrixErr error = matTensorFit(t1, t2, &new_t1, &new_t2);
-
-    if (error != MAT_NO_ERROR) {
-        freeTensor(new_t1);
-        freeTensor(new_t2);
-
-        return error;
-    }
-
-    Tensor *res = matMakeTensor(new_t1->ndims, new_t1->dimsz);
-    res->data = (double *) malloc(sizeof(double) * res->literal_size);
-
-    for (int i = 0; i < new_t1->literal_size; i++) {
-        int *ind1 = matNIAt(*new_t1, i);
-        int *ind2 = matNIAt(*new_t2, i);
-        int *indr = matNIAt(*res, i);
-
-        *matNAtI(*res, indr) = *matNAtI(*new_t1, ind1) + *matNAtI(*new_t2, ind2);
-    }
-
-    *r = res;
-
-    return MAT_NO_ERROR;
-}
-
-MatrixErr matMul(Matrix2 m1, Matrix2 m2, Matrix2 **r) {
-    // Error checking.
-    if (r == NULL) return MAT_NULL_PTR;
-    *r = NULL;
-    if (!matinit) return MAT_UNINITIALIZED;
-    if (m1.width != m2.height) return MAT_DIMENSION_MISTMATCH;
-    
     // Standard kernel call in OCLAPI.
-    *r = matMakeMatrix2(m2.width, m1.height);
-    Matrix2 *res = *r;
-    res->data = (double *) malloc(sizeof(double) * res->width * res->height);
+    unsigned *rdimsz = (unsigned *) malloc(sizeof(unsigned) * new_t1->ndims);
+    for (int i = 0; i < new_t2->ndims; i++) 
+        rdimsz[i] = new_t2->dimsz[i];
+    rdimsz[0] = new_t1->dimsz[0];
 
-    size_t gz[] = { res->width, res->height };
-    claRunKernel("matmul", 2, gz, NULL,
-                 m1.data, m1.width * m1.height, OCLREAD | OCLCPY,
-                 m2.data, m2.width * m2.height, OCLREAD | OCLCPY,
-                 m2.width, m1.width, 
-                 res->data, res->width * res->height, OCLWRITE | OCLOUT);
+    *r = matMakeTensor(new_t1->ndims, rdimsz, NULL);
+    Tensor *res = *r;
+    res->data = (double *) malloc(sizeof(double) * res->literal_size);
+
+    size_t gz[] = { res->literal_size };
+    claRunKernel("matmul", 1, gz, NULL,
+                 new_t1->data, new_t1->literal_size, OCLREAD | OCLCPY,
+                 new_t2->data, new_t2->literal_size, OCLREAD | OCLCPY,
+                 new_t1->dimsz[0], new_t2->dimsz[0],
+                 res->data, res->literal_size, OCLWRITE | OCLOUT,
+                 res->dimsz, res->ndims, OCLREAD | OCLCPY);
     if (claGetError()) return MAT_KERNEL_FAILURE;
 
     return MAT_NO_ERROR;
 }
 
-MatrixErr matAdd(Matrix2 m1, Matrix2 m2, Matrix2 **r) {
-    // Error checking.
+MatrixErr matDot(Tensor *t1, Tensor *t2, Tensor **r) {
     if (r == NULL) return MAT_NULL_PTR;
     *r = NULL;
-    if (!matinit) return MAT_UNINITIALIZED;
-    if (m1.width != m2.width || m1.height != m2.height) return MAT_DIMENSION_MISTMATCH;
-    
-    // Standard kernel call in OCLAPI.
-    *r = matMakeMatrix2(m1.width, m1.height);
-    Matrix2 *res = *r;
-    res->data = (double *) malloc(sizeof(double) * res->width * res->height);
-
-    size_t gz[] = { res->width, res->height };
-    claRunKernel("matadd", 2, gz, NULL, 
-                 m1.data, m1.width * m1.height, OCLREAD | OCLCPY,
-                 m2.data, m2.width * m2.height, OCLREAD | OCLCPY,
-                 m1.width, m1.height,
-                 res->data, res->width * res->height, OCLWRITE | OCLOUT);
-    if (claGetError()) return MAT_KERNEL_FAILURE;
-
-    return MAT_NO_ERROR;
-}
-
-MatrixErr matSub(Matrix2 m1, Matrix2 m2, Matrix2 **r) {
-    // Error checking.
-    if (r == NULL) return MAT_NULL_PTR;
-    *r = NULL;
-    if (!matinit) return MAT_UNINITIALIZED;
-    if (m1.width != m2.width || m1.height != m2.height) return MAT_DIMENSION_MISTMATCH;
-
-    // Standard kernel call in OCLAPI.
-    *r = matMakeMatrix2(m1.width, m1.height);
-    Matrix2 *res = *r;
-    res->data = (double *) malloc(sizeof(double) * res->width * res->height);
-
-    size_t gz[] = { res->width, res->height };
-    claRunKernel("matsub", 2, gz, NULL, 
-                 m1.data, m1.width * m1.height, OCLREAD | OCLCPY,
-                 m2.data, m2.width * m2.height, OCLREAD | OCLCPY,
-                 m1.width, m1.height,
-                 res->data, res->width * res->height, OCLWRITE | OCLOUT);
-    if (claGetError()) return MAT_KERNEL_FAILURE;
-
-    return MAT_NO_ERROR;
-}
-
-Matrix2* matT2(Matrix2 m) {
-    // Error checking.
-    if (!matinit) return NULL;
-
-    // Standard kernel call in OCLAPI.
-    Matrix2 *res = matMakeMatrix2(m.height, m.width);
-    res->data = (double *) malloc(sizeof(double) * res->width * res->height);
-
-    size_t gz[] = { res->height, res->width };
-    claRunKernel("matt", 2, gz, NULL,
-                 m.data, m.width * m.height, OCLREAD | OCLCPY,
-                 m.width, m.height,
-                 res->data, res->width * res->height, OCLWRITE | OCLOUT);
-    if (claGetError()) return NULL;
-    
-    return res;
-}
-
-// PERF: Write this using GPU acceleration. This would either require using `matT2`,
-// PERF: or, implement `matlib.h` and use `MatrixN` `matNAtI`.
-Tensor* matTTensor(Tensor m) {
-    // Error checking.
-    if (!matinit) return NULL;
-
-    // Shift dimensions forward.
-    int *dims = (int *) malloc(sizeof(int) * m.ndims);
-    dims[0] = m.dimsz[m.ndims - 1];
-    for (int i = 1; i < m.ndims; i++) dims[i] = m.dimsz[i - 1];
-
-    Tensor *res = matMakeTensor(m.ndims, dims);
-    res->data = (double *) malloc(sizeof(double) * res->literal_size);
-    free(dims);
-
-    for (int i = 0; i < res->literal_size; i++) {
-        int *r_ind = matNIAt(*res, i);
-
-        int *m_ind = (int *) malloc(sizeof(int) * m.ndims);
-        for (int j = 0; j < m.ndims - 1; j++) m_ind[j] = r_ind[j + 1];
-        m_ind[m.ndims - 1] = r_ind[0];
-
-        *matNAtI(*res, r_ind) = *matNAtI(m, m_ind);
-
-        free(r_ind);
-        free(m_ind);
+    {
+        MatrixErr err;
+        if (matCheckTensor(t1, &err) != MAT_NO_ERROR) return err;
+        if (matCheckTensor(t2, &err) != MAT_NO_ERROR) return err;
     }
-
-    return res;
-}*/
-
+    
+    return MAT_NO_ERROR;
+}
