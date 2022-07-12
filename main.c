@@ -17,21 +17,21 @@ int main() {
 
     error = matInit();
 
-    Tensor *t1 = matMakeTensor(3, (unsigned []) { 3, 3, 3 }, (MatrixErr *) &error);
+    Tensor *t1 = matMakeTensor(1, (unsigned []) { 2, 3, 3 }, (MatrixErr *) &error);
     t1->data = (double *) malloc(sizeof(double) * t1->literal_size);
     for (int i = 0; i < t1->literal_size; i++) t1->data[i] = i;
     matTensorPrint(t1);
 
-    Tensor *t2 = matMakeTensor(3, (unsigned []) { 3, 3, 3 }, (MatrixErr *) &error);
+    Tensor *t2 = matMakeTensor(2, (unsigned []) { 2, 2, 3 }, (MatrixErr *) &error);
     t2->data = (double *) malloc(sizeof(double) * t2->literal_size);
     for (int i = 0; i < t2->literal_size; i++) t2->data[i] = i;
     matTensorPrint(t2);
 
     Tensor *c = matMakeScalar(20, (MatrixErr *) &error);
-    matTensorPrint(c);
+    //matTensorPrint(c);
 
     Tensor *r;
-    matProd(t1, c, &r);
+    matProd(t1, t2, &r);
     matTensorPrint(r);
 
     claCln();

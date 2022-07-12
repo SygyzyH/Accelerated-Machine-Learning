@@ -267,6 +267,8 @@ unsigned* matTensorIAt(Tensor *t, int literal, MatrixErr *e) {
 }
 
 MatrixErr matProd(Tensor *t1, Tensor *t2, Tensor **r) {
+    // FIXME: Fix vector behavior
+    // Vector should be promoted but not fitted.
     if (r == NULL) return MAT_NULL_PTR;
     *r = NULL;
     {
@@ -275,27 +277,74 @@ MatrixErr matProd(Tensor *t1, Tensor *t2, Tensor **r) {
         if (matCheckTensor(t2, &err) != MAT_NO_ERROR) return err;
     }
 
-    Tensor *new_t1;
-    Tensor *new_t2;
-    if (matTensorFit(t1, t2, &new_t1, &new_t2)) return MAT_UNFIT_TENSORS;
+    if (t1->ndims == 0 || t2->ndims == 0) return MAT_DIMENSION_MISTMATCH;
+    if (t1->ndims != 1 && t2->ndims != 1 && t1->ndims != t2->ndims)
+        return MAT_DIMENSION_MISTMATCH;
+    if (t1->dimsz[0] != ((t2->ndims > 1)? t2->dimsz[1] : t2->dimsz[0]))
+        return MAT_UNFIT_TENSORS;
+    
+    int t1_vector = 0;
+    unsigned *odimsz1 = t1->dimsz;
+    if (t1->ndims == 1) {
+        t1->ndims = 2;
+        odimsz1 = t1->dimsz;
+        t1->dimsz = (unsigned *) malloc(sizeof(unsigned) * t1->ndims);
+        t1->dimsz[0] = odimsz1[0];
+        t1->dimsz[1] = 1;
+        
+        t1_vector = 1;
+    }
+    
+    int t2_vector = 0;
+    unsigned *odimsz2 = t2->dimsz;
+    if (t2->ndims == 1) {
+        t2->ndims = 2;
+        odimsz1 = t2->dimsz;
+        t2->dimsz = (unsigned *) malloc(sizeof(unsigned) * t2->ndims);
+        t2->dimsz[0] = odimsz2[0];
+        t2->dimsz[1] = 1;
+        
+        t2_vector = 1;
+    }
+
+    Tensor *biggest = (t1->ndims > t2->ndims)? t1 : t2;
+    unsigned *rdimsz = (unsigned *) malloc(sizeof(unsigned) * biggest->ndims);
+    for (int i = 2; i < biggest->ndims; i++) {
+        if (t1->dimsz[i] != t2->dimsz[i] && t1->dimsz[i] != 1 && t2->dimsz[i] != 1) 
+            return MAT_UNFIT_TENSORS;
+        
+        rdimsz[i] = biggest->dimsz[i];
+    }
+    rdimsz[0] = t2->dimsz[0];
+    rdimsz[1] = (t1->ndims > 1)? t1->dimsz[1] : t1->dimsz[0];
 
     // Standard kernel call in OCLAPI.
-    unsigned *rdimsz = (unsigned *) malloc(sizeof(unsigned) * new_t1->ndims);
-    for (int i = 0; i < new_t2->ndims; i++) 
-        rdimsz[i] = new_t2->dimsz[i];
-    rdimsz[0] = new_t1->dimsz[0];
-
-    *r = matMakeTensor(new_t1->ndims, rdimsz, NULL);
+    *r = matMakeTensor(biggest->ndims, rdimsz, NULL);
     Tensor *res = *r;
     res->data = (double *) malloc(sizeof(double) * res->literal_size);
 
     size_t gz[] = { res->literal_size };
     claRunKernel("matprod", 1, gz, NULL,
-                 new_t1->data, new_t1->literal_size, OCLREAD | OCLCPY,
-                 new_t2->data, new_t2->literal_size, OCLREAD | OCLCPY,
-                 new_t1->dimsz[0], new_t2->dimsz[0],
+                 t1->data, t1->literal_size, OCLREAD | OCLCPY,
+                 t2->data, t2->literal_size, OCLREAD | OCLCPY,
+                 t1->dimsz, t1->ndims, OCLREAD | OCLCPY,
+                 t2->dimsz, t2->ndims, OCLREAD | OCLCPY,
                  res->data, res->literal_size, OCLWRITE | OCLOUT,
-                 res->dimsz, res->ndims, OCLREAD | OCLCPY);
+                 res->dimsz, res->ndims, OCLREAD | OCLCPY,
+                 res->ndims);
+
+    if (t1_vector) {
+        t1->ndims = 1;
+        free(t1->dimsz);
+        t1->dimsz = odimsz1;
+    }
+    
+    if (t1_vector) {
+        t1->ndims = 1;
+        free(t1->dimsz);
+        t1->dimsz = odimsz1;
+    }
+
     if (claGetError()) return MAT_KERNEL_FAILURE;
 
     return MAT_NO_ERROR;
@@ -345,5 +394,7 @@ MatrixErr matDot(Tensor *t1, Tensor *t2, Tensor **r) {
         if (matCheckTensor(t2, &err) != MAT_NO_ERROR) return err;
     }
     
+    if (t1->ndims == 0 || t2->ndims == 0) return matMult(t1, t2, r);
+
     return MAT_NO_ERROR;
 }

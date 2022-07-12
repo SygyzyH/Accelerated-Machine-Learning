@@ -28,23 +28,49 @@ void sumArray(__local double **tmp, int bsize, int li) {
     barrier(CLK_LOCAL_MEM_FENCE);
 }
 
+unsigned remapLinearIndexSpace(int literal, __global unsigned *source_mapping, __global unsigned *target_mapping, int mapping_size);
+
+// assert(target_mapping_size == source_mapping_size)
+unsigned remapLinearIndexSpace(int literal, __global unsigned *source_mapping, __global unsigned *target_mapping, int mapping_size) {
+    unsigned sum = 0;
+    unsigned source_stride = 1;
+    unsigned target_stride = 1;
+
+    for (int i = 0; i < mapping_size; i++) {
+        int ind = (literal / source_stride) % source_mapping[i];
+        source_stride *= source_mapping[i];
+        literal -= ind;
+        sum += ind * target_stride;
+        target_stride *= target_mapping[i];
+    }
+    
+    return sum;
+}
+
 // adimsz = adimsz[0], bdimsz = bdimsz[0]
-__kernel void matprod(__global double *a, __global double *b, unsigned adimsz, unsigned bdimsz, __global double *r, __global unsigned *rdimsz) {
-    // TODO: Support for fitted tensors
+__kernel void matprod(__global double *a, __global double *b, __global unsigned *adimsz, __global unsigned *bdimsz, __global double *r, __global unsigned *rdimsz, int ndims) {
     int gi = get_global_id(0);
 
     int a_stride = 1;
-    int b_stride = bdimsz;
+    int b_stride = bdimsz[0];
 
-    int offseta = gi - (gi % rdimsz[0]);
+    int gi_dim0 = gi % rdimsz[0];
+    int offseta = remapLinearIndexSpace(gi - gi_dim0, rdimsz, adimsz, ndims);
+    //offseta = gi_dim0;
     // gi ecluding first dimension index
-    int offsetb = gi - ((offseta / rdimsz[1]) % rdimsz[1]) * rdimsz[1];
+    int gi_dim1 = ((gi - gi_dim0) / rdimsz[0]);
+    if (ndims > 1) gi_dim1 %= rdimsz[1];
+    int offsetb = remapLinearIndexSpace(gi - gi_dim1 * rdimsz[0], rdimsz, bdimsz, ndims);
 
     // assert(bdimsz[1] == adimsz[0])
-    int iter = adimsz;
+    // Common dimension.
+    int iter = adimsz[0];
+    //if (gi == 1) printf("gi: 1, remapped: %d\\n", remapLinearIndexSpace(gi, rdimsz, adimsz, ndims));
 
     r[gi] = 0;
     for (int i = 0; i < iter; i++) {
+        printf("gi: #%d, i: #%d, offseta: %d, a: %d, offsetb: %d, b: %d\\n",
+               gi, i, offseta, offseta + i * a_stride, offsetb, offsetb + i * b_stride);
         r[gi] += a[offseta + i * a_stride] * b[offsetb + i * b_stride];
     }
 }
