@@ -16,7 +16,7 @@ MatrixErr matInit() {
     // Source code defined in "acceleration/kernels/static_kernels_src.h"
     const char *src_kernel = KERNEL_STATIC_SOURCE_MAT_CL;
     
-    claRegisterFromSrc(&src_kernel, 4, "matmul", "matadd", "matsub", "matprod");
+    claRegisterFromSrc(&src_kernel, 5, "matmul", "matadd", "matsub", "matprod", "matdot");
     if (claGetError()) return MAT_INITIALIZATION_FAILED;
     
     matinit = true;
@@ -175,6 +175,7 @@ MatrixErr matTensorFit(Tensor *t1, Tensor *t2, Tensor **t1r, Tensor **t2r) {
     }
 
     Tensor *t1_res = matMakeTensor(biggest->ndims, t1_dims, NULL);
+    free(t1_dims);
     t1_res->data = (double *) malloc(sizeof(double) * t1_res->literal_size);
 
     for (int i = 0; i < t1_res->literal_size; i++) {
@@ -193,6 +194,7 @@ MatrixErr matTensorFit(Tensor *t1, Tensor *t2, Tensor **t1r, Tensor **t2r) {
     }
     
     Tensor *t2_res = matMakeTensor(biggest->ndims, t2_dims, NULL);
+    free(t2_dims);
     t2_res->data = (double *) malloc(sizeof(double) * t2_res->literal_size);
 
     for (int i = 0; i < t2_res->literal_size; i++) {
@@ -255,10 +257,11 @@ unsigned* matTensorIAt(Tensor *t, int literal, MatrixErr *e) {
     }
 
     unsigned *ind = (unsigned *) malloc(sizeof(unsigned) * t->ndims);
-    int stride = 1;
+    unsigned stride = 1;
     for (int i = 0; i < t->ndims; i++) {
         ind[i] = (literal / stride) % t->dimsz[i];
         stride *= t->dimsz[i];
+        // TODO: Could this be redundent?
         literal -= ind[i];
     }
 
@@ -267,8 +270,7 @@ unsigned* matTensorIAt(Tensor *t, int literal, MatrixErr *e) {
 }
 
 MatrixErr matProd(Tensor *t1, Tensor *t2, Tensor **r) {
-    // FIXME: Fix vector behavior
-    // Vector should be promoted but not fitted.
+    // TODO: Testing: tensor * tensor, tensor * matrix, matrix * matrix, matrix * vector, vector * vector, tensor * vector (requires the fix).
     if (r == NULL) return MAT_NULL_PTR;
     *r = NULL;
     {
@@ -283,6 +285,7 @@ MatrixErr matProd(Tensor *t1, Tensor *t2, Tensor **r) {
     if (t1->dimsz[0] != ((t2->ndims > 1)? t2->dimsz[1] : t2->dimsz[0]))
         return MAT_UNFIT_TENSORS;
     
+    // FIXME: Vector new size should be both pre/apended, and than also broadcast to fit second tensor.
     int t1_vector = 0;
     unsigned *odimsz1 = t1->dimsz;
     if (t1->ndims == 1) {
@@ -299,18 +302,19 @@ MatrixErr matProd(Tensor *t1, Tensor *t2, Tensor **r) {
     unsigned *odimsz2 = t2->dimsz;
     if (t2->ndims == 1) {
         t2->ndims = 2;
-        odimsz1 = t2->dimsz;
+        odimsz2 = t2->dimsz;
         t2->dimsz = (unsigned *) malloc(sizeof(unsigned) * t2->ndims);
-        t2->dimsz[0] = odimsz2[0];
-        t2->dimsz[1] = 1;
+        t2->dimsz[0] = 1;
+        t2->dimsz[1] = odimsz2[0];
         
         t2_vector = 1;
     }
 
     Tensor *biggest = (t1->ndims > t2->ndims)? t1 : t2;
-    unsigned *rdimsz = (unsigned *) malloc(sizeof(unsigned) * biggest->ndims);
-    for (int i = 2; i < biggest->ndims; i++) {
-        if (t1->dimsz[i] != t2->dimsz[i] && t1->dimsz[i] != 1 && t2->dimsz[i] != 1) 
+    int rndims = biggest->ndims;
+    unsigned *rdimsz = (unsigned *) malloc(sizeof(unsigned) * rndims);
+    for (int i = 2; i < rndims; i++) {
+        if (t1->dimsz[i] != t2->dimsz[i] && t1->dimsz[i] != 1 && t2->dimsz[i] != 1)
             return MAT_UNFIT_TENSORS;
         
         rdimsz[i] = biggest->dimsz[i];
@@ -319,7 +323,8 @@ MatrixErr matProd(Tensor *t1, Tensor *t2, Tensor **r) {
     rdimsz[1] = (t1->ndims > 1)? t1->dimsz[1] : t1->dimsz[0];
 
     // Standard kernel call in OCLAPI.
-    *r = matMakeTensor(biggest->ndims, rdimsz, NULL);
+    *r = matMakeTensor(rndims, rdimsz, NULL);
+    free(rdimsz);
     Tensor *res = *r;
     res->data = (double *) malloc(sizeof(double) * res->literal_size);
 
@@ -339,13 +344,22 @@ MatrixErr matProd(Tensor *t1, Tensor *t2, Tensor **r) {
         t1->dimsz = odimsz1;
     }
     
-    if (t1_vector) {
-        t1->ndims = 1;
-        free(t1->dimsz);
-        t1->dimsz = odimsz1;
+    if (t2_vector) {
+        t2->ndims = 1;
+        free(t2->dimsz);
+        t2->dimsz = odimsz2;
     }
 
-    if (claGetError()) return MAT_KERNEL_FAILURE;
+    if (matIsTensorScalar(res)) {
+        double res_s = res->data[0];
+        matFreeTensor(r);
+        *r = matMakeScalar(res_s, NULL);
+    }
+
+    if (claGetError()) {
+        matFreeTensor(r);
+        return MAT_KERNEL_FAILURE;
+    }
 
     return MAT_NO_ERROR;
 }
@@ -370,6 +384,7 @@ MatrixErr matMult(Tensor *t1, Tensor *t2, Tensor **r) {
     rdimsz[0] = new_t1->dimsz[0];
 
     *r = matMakeTensor(new_t1->ndims, rdimsz, NULL);
+    free(rdimsz);
     Tensor *res = *r;
     res->data = (double *) malloc(sizeof(double) * res->literal_size);
 
@@ -386,6 +401,9 @@ MatrixErr matMult(Tensor *t1, Tensor *t2, Tensor **r) {
 }
 
 MatrixErr matDot(Tensor *t1, Tensor *t2, Tensor **r) {
+    // TODO: If this is written correctly, no need for the if statments - all cases can be handled the same way.
+    // NOTE: Can't this reuse matprod kernel?
+    // I think not.
     if (r == NULL) return MAT_NULL_PTR;
     *r = NULL;
     {
@@ -395,6 +413,33 @@ MatrixErr matDot(Tensor *t1, Tensor *t2, Tensor **r) {
     }
     
     if (t1->ndims == 0 || t2->ndims == 0) return matMult(t1, t2, r);
+    if (t1->ndims <= 2 && t2->ndims <= 2) return matProd(t1, t2, r);
+    
+    // Tensors are both ND, N > 2.
+    unsigned ndims = MAX(0, t1->ndims + t2->ndims - 2);
+    unsigned *dimsz = (unsigned *) malloc(sizeof(unsigned) * (ndims? ndims : 1));
+    // For scalar result. If nonscalar - this would be overwritten.
+    dimsz[0] = 1;
+    for (int i = 0; i < ndims; i++) {
+        if (i + 1 < t1->ndims) dimsz[i] = t1->dimsz[i + 1];
+        else if (i + 1 == t1->ndims) dimsz[i] = t2->dimsz[0];
+        else dimsz[i] = t2->dimsz[i - t1->ndims + 2];
+    }
+
+    *r = matMakeTensor(ndims, dimsz, NULL);
+    free(dimsz);
+    Tensor *res = *r;
+    res->data = (double *) malloc(sizeof(double) * res->literal_size);
+
+    size_t gz[] = { res->literal_size };
+    claRunKernel("matdot", 1, gz, NULL,
+                 t1->data, t1->literal_size, OCLREAD | OCLCPY,
+                 t2->data, t2->literal_size, OCLREAD | OCLCPY,
+                 t1->ndims, t1->dimsz, t1->ndims, OCLREAD | OCLCPY,
+                 t2->ndims, t2->dimsz, t2->ndims, OCLREAD | OCLCPY,
+                 res->data, res->literal_size, OCLWRITE | OCLOUT,
+                 res->ndims, res->dimsz, res->ndims, OCLREAD | OCLCPY);
+    if (claGetError()) return MAT_KERNEL_FAILURE;
 
     return MAT_NO_ERROR;
 }

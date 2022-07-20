@@ -53,6 +53,7 @@ void matTensorPrint(Tensor *t);
 
 MatrixErr matProd(Tensor *t1, Tensor *t2, Tensor **r);
 MatrixErr matMult(Tensor *t1, Tensor *t2, Tensor **r);
+MatrixErr matDot(Tensor *t1, Tensor *t2, Tensor **r);
 
 static const char* matGetErrorString(MatrixErr error) {
     switch (error) {
@@ -102,6 +103,11 @@ static MatrixErr matCheckTensor(Tensor *t, MatrixErr *e) {
     if (e != NULL) *e = error;
 
     return error;
+}
+
+static inline int matIsTensorScalar(Tensor *t) {
+    if (t == NULL) return 0;
+    return t->literal_size == 1;
 }
 
 static inline Tensor* matMakeScalar(double s, MatrixErr *e) {

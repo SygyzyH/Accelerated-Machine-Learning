@@ -38,8 +38,9 @@ unsigned remapLinearIndexSpace(int literal, __global unsigned *source_mapping, _
 
     for (int i = 0; i < mapping_size; i++) {
         int ind = (literal / source_stride) % source_mapping[i];
+        // TODO: Could this be redundent?
+        // literal -= ind;
         source_stride *= source_mapping[i];
-        literal -= ind;
         sum += ind * target_stride;
         target_stride *= target_mapping[i];
     }
@@ -51,13 +52,13 @@ unsigned remapLinearIndexSpace(int literal, __global unsigned *source_mapping, _
 __kernel void matprod(__global double *a, __global double *b, __global unsigned *adimsz, __global unsigned *bdimsz, __global double *r, __global unsigned *rdimsz, int ndims) {
     int gi = get_global_id(0);
 
-    int a_stride = 1;
-    int b_stride = bdimsz[0];
+    unsigned a_stride = 1;
+    unsigned b_stride = bdimsz[0];
 
     int gi_dim0 = gi % rdimsz[0];
     int offseta = remapLinearIndexSpace(gi - gi_dim0, rdimsz, adimsz, ndims);
-    //offseta = gi_dim0;
-    // gi ecluding first dimension index
+    
+    // gi excluding first dimension index
     int gi_dim1 = ((gi - gi_dim0) / rdimsz[0]);
     if (ndims > 1) gi_dim1 %= rdimsz[1];
     int offsetb = remapLinearIndexSpace(gi - gi_dim1 * rdimsz[0], rdimsz, bdimsz, ndims);
@@ -65,14 +66,33 @@ __kernel void matprod(__global double *a, __global double *b, __global unsigned 
     // assert(bdimsz[1] == adimsz[0])
     // Common dimension.
     int iter = adimsz[0];
-    //if (gi == 1) printf("gi: 1, remapped: %d\\n", remapLinearIndexSpace(gi, rdimsz, adimsz, ndims));
 
     r[gi] = 0;
     for (int i = 0; i < iter; i++) {
-        printf("gi: #%d, i: #%d, offseta: %d, a: %d, offsetb: %d, b: %d\\n",
-               gi, i, offseta, offseta + i * a_stride, offsetb, offsetb + i * b_stride);
+        // printf("gi: #%d, i: #%d, offseta: %d, a: %d, offsetb: %d, b: %d\\n",
+        //        gi, i, offseta, offseta + i * a_stride, offsetb, offsetb + i * b_stride);
         r[gi] += a[offseta + i * a_stride] * b[offsetb + i * b_stride];
     }
+}
+
+__kernel void matdot(__global double *a, __global double *b, unsigned andims, __global unsigned *adimsz, unsigned bndims, __global unsigned *bdimsz, __global double *r, unsigned rndims, __global unsigned *rdimsz) {
+    int gi = get_global_id(0);
+
+    unsigned a_stride = 1;
+    unsigned b_stride = bdimsz[0];
+
+    // is first andims - 1 indecies of rndims
+    unsigned a_ind = remapLinearIndexSpace(gi, rdimsz, &adimsz[1], andims - 1) * adimsz[0];
+    
+    unsigned a_mul_st = 1;
+    for (int i = 1; i < andims; i++) a_mul_st *= adimsz[i];
+    unsigned dimba = (gi - a_ind / adimsz[0]) / a_mul_st;
+    unsigned fdimb = dimba % bdimsz[0];
+    unsigned b_ind = fdimb + (dimba - fdimb) * bdimsz[1];
+
+    r[gi] = 0;
+    for (int i = 0; i < adimsz[0]; i++)
+        r[gi] += a[a_ind + a_stride * i] * b[b_ind + b_stride * i];
 }
 
 __kernel void matadd(__global double *a, __global double *b, __global double *r) {
