@@ -285,15 +285,14 @@ MatrixErr matProd(Tensor *t1, Tensor *t2, Tensor **r) {
     if (t1->dimsz[0] != ((t2->ndims > 1)? t2->dimsz[1] : t2->dimsz[0]))
         return MAT_UNFIT_TENSORS;
     
-    // FIXME: Vector new size should be both pre/apended, and than also broadcast to fit second tensor.
     int t1_vector = 0;
     unsigned *odimsz1 = t1->dimsz;
     if (t1->ndims == 1) {
-        t1->ndims = 2;
+        t1->ndims = MAX(2, t2->ndims);
         odimsz1 = t1->dimsz;
         t1->dimsz = (unsigned *) malloc(sizeof(unsigned) * t1->ndims);
         t1->dimsz[0] = odimsz1[0];
-        t1->dimsz[1] = 1;
+        for (int i = 1; i < t1->ndims; i++) t1->dimsz[i] = 1;
         
         t1_vector = 1;
     }
@@ -301,11 +300,12 @@ MatrixErr matProd(Tensor *t1, Tensor *t2, Tensor **r) {
     int t2_vector = 0;
     unsigned *odimsz2 = t2->dimsz;
     if (t2->ndims == 1) {
-        t2->ndims = 2;
+        t2->ndims = MAX(2, t1->ndims);
         odimsz2 = t2->dimsz;
         t2->dimsz = (unsigned *) malloc(sizeof(unsigned) * t2->ndims);
         t2->dimsz[0] = 1;
         t2->dimsz[1] = odimsz2[0];
+        for (int i = 2; i < t2->ndims; i++) t2->dimsz[i] = 1;
         
         t2_vector = 1;
     }
@@ -401,7 +401,7 @@ MatrixErr matMult(Tensor *t1, Tensor *t2, Tensor **r) {
 }
 
 MatrixErr matDot(Tensor *t1, Tensor *t2, Tensor **r) {
-    // TODO: If this is written correctly, no need for the if statments - all cases can be handled the same way.
+    // NOTE: If this is written correctly, no need for the if statments - all cases can be handled the same way.
     // NOTE: Can't this reuse matprod kernel?
     // I think not.
     if (r == NULL) return MAT_NULL_PTR;

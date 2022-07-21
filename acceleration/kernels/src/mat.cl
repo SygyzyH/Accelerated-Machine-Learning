@@ -41,7 +41,7 @@ unsigned remapLinearIndexSpace(int literal, __global unsigned *source_mapping, _
         // TODO: Could this be redundent?
         // literal -= ind;
         source_stride *= source_mapping[i];
-        sum += ind * target_stride;
+        if (target_mapping[i] > 1) sum += ind * target_stride;
         target_stride *= target_mapping[i];
     }
     
@@ -69,8 +69,8 @@ __kernel void matprod(__global double *a, __global double *b, __global unsigned 
 
     r[gi] = 0;
     for (int i = 0; i < iter; i++) {
-        // printf("gi: #%d, i: #%d, offseta: %d, a: %d, offsetb: %d, b: %d\\n",
-        //        gi, i, offseta, offseta + i * a_stride, offsetb, offsetb + i * b_stride);
+        printf("gi: #%d, i: #%d, offseta: %d, a: %d, offsetb: %d, b: %d\\n",
+                gi, i, offseta, offseta + i * a_stride, offsetb, offsetb + i * b_stride);
         r[gi] += a[offseta + i * a_stride] * b[offsetb + i * b_stride];
     }
 }
