@@ -17,7 +17,7 @@ project(aml)
 # https://github.com/fireice-uk/xmr-stak-amd/issues/97
 find_package(OpenCL REQUIRED)
 
-add_executable(aml main.c acceleration/oclapi.c matrix/mat.c )#ml/layers.c ml/machine.c ml/optimizer.c)
+add_executable(aml main.c acceleration/oclapi.c matrix/mat.c ml/layers.c ml/machine.c ml/optimizer.c)
 
 # Put kernel sources into program build, staticly.
 # Strings at the CMAKE_MODIFIED_HEADER_OUTPUT header constructed

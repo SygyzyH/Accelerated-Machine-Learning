@@ -54,6 +54,12 @@ void matTensorPrint(Tensor *t);
 MatrixErr matProd(Tensor *t1, Tensor *t2, Tensor **r);
 MatrixErr matMult(Tensor *t1, Tensor *t2, Tensor **r);
 MatrixErr matDot(Tensor *t1, Tensor *t2, Tensor **r);
+MatrixErr matAdd(Tensor *t1, Tensor *t2, Tensor **r);
+MatrixErr matSub(Tensor *t1, Tensor *t2, Tensor **r);
+
+MatrixErr matTTensor(Tensor *t, Tensor **r);
+
+MatrixErr matSum(double *src, int size, double *res);
 
 static const char* matGetErrorString(MatrixErr error) {
     switch (error) {
@@ -86,11 +92,20 @@ static void matFreeTensor(Tensor **t) {
     Tensor *t_d = *t;
     if (t_d != NULL) {
         free(t_d->data);
+        t_d->data = NULL;
         free(t_d->dimsz);
+        t_d->dimsz = NULL;
     }
 
     free(*t);
     *t = NULL;
+}
+
+static void matFreeTensorD(Tensor t) {
+    free(t.data);
+    t.data = NULL;
+    free(t.dimsz);
+    t.dimsz = NULL;
 }
 
 static MatrixErr matCheckTensor(Tensor *t, MatrixErr *e) {
@@ -121,6 +136,19 @@ static inline Tensor* matMakeScalar(double s, MatrixErr *e) {
     }
     
     return t;
+}
+
+static inline Tensor* matTensorFlatten(Tensor *t, MatrixErr *e) {
+    if (matCheckTensor(t, e) != MAT_NO_ERROR) return NULL;
+ 
+    unsigned *dimsz = (unsigned *) malloc(sizeof(unsigned));
+    dimsz[0] = t->literal_size;
+    Tensor *r = matMakeTensor(1, dimsz, NULL);
+    free(dimsz);
+    r->data = (double *) malloc(sizeof(double) * r->literal_size);
+    memcpy((void *) r->data, (void *) t->data, t->literal_size * sizeof(double));
+
+    return r;
 }
 
 #endif

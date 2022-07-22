@@ -13,6 +13,7 @@ typedef enum {
     ML_LAYER_INVALID_INPUT_DIMS,
     ML_LAYER_INTERNAL_ERROR,
     ML_MACHINE_UNINITIALIZED_LAYER,
+    ML_MAT_ERROR,
     ML_NULL_PTR
 } MLErr;
 
@@ -147,7 +148,7 @@ typedef enum {
     ML_WEIGHT_INITIALIZER_GLOROT
 } MLWeightInitializerType;
 
-Tensor* mlWeightInitializer(MLWeightInitializerType initializer, int ndims, int *dims);
+Tensor* mlWeightInitializer(MLWeightInitializerType initializer, unsigned ndims, unsigned *dims);
 
 /* LearningInstance*/
 

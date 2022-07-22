@@ -1,7 +1,6 @@
 // TODO: Kernels should use stride instead of width for indexing. Can be done in include.
 #include <opencl-c-base.h>
 #include <opencl-c.h>
-//#include "../include/matutil.h"
 
 void sumArray(__local double **tmp, int bsize, int li);
 
@@ -28,6 +27,12 @@ void sumArray(__local double **tmp, int bsize, int li) {
     barrier(CLK_LOCAL_MEM_FENCE);
 }
 
+__kernel void sum(__global double *src, int src_size, __local double *temp, __global double *res) {
+    int li = get_global_id(0);
+    sumArray(&temp, src_size, li);
+    if (li == 0) res[0] = temp[0];
+}
+
 unsigned remapLinearIndexSpace(int literal, __global unsigned *source_mapping, __global unsigned *target_mapping, int mapping_size);
 
 // assert(target_mapping_size == source_mapping_size)
@@ -38,8 +43,6 @@ unsigned remapLinearIndexSpace(int literal, __global unsigned *source_mapping, _
 
     for (int i = 0; i < mapping_size; i++) {
         int ind = (literal / source_stride) % source_mapping[i];
-        // TODO: Could this be redundent?
-        // literal -= ind;
         source_stride *= source_mapping[i];
         if (target_mapping[i] > 1) sum += ind * target_stride;
         target_stride *= target_mapping[i];
@@ -69,8 +72,8 @@ __kernel void matprod(__global double *a, __global double *b, __global unsigned 
 
     r[gi] = 0;
     for (int i = 0; i < iter; i++) {
-        printf("gi: #%d, i: #%d, offseta: %d, a: %d, offsetb: %d, b: %d\\n",
-                gi, i, offseta, offseta + i * a_stride, offsetb, offsetb + i * b_stride);
+        //printf("gi: #%d, i: #%d, offseta: %d, a: %d, offsetb: %d, b: %d\\n",
+        //        gi, i, offseta, offseta + i * a_stride, offsetb, offsetb + i * b_stride);
         r[gi] += a[offseta + i * a_stride] * b[offsetb + i * b_stride];
     }
 }

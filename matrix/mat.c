@@ -16,7 +16,7 @@ MatrixErr matInit() {
     // Source code defined in "acceleration/kernels/static_kernels_src.h"
     const char *src_kernel = KERNEL_STATIC_SOURCE_MAT_CL;
     
-    claRegisterFromSrc(&src_kernel, 5, "matmul", "matadd", "matsub", "matprod", "matdot");
+    claRegisterFromSrc(&src_kernel, 6, "matmul", "matadd", "matsub", "matprod", "matdot", "sum");
     if (claGetError()) return MAT_INITIALIZATION_FAILED;
     
     matinit = true;
@@ -109,6 +109,7 @@ void matTensorPrint(Tensor *t) {
         }
     }
 
+    printf("dims ");
     if (t->ndims == 0) printf("1\n");
     else {
         for (int i = 0; i < t->ndims - 1; i++) printf("%dx", t->dimsz[i]);
@@ -122,15 +123,19 @@ Tensor* matTensorDeepCopy(Tensor *t, MatrixErr *e) {
         
         return NULL;
     }
-    Tensor *r = matMakeTensor(t->ndims, t->dimsz, e);
 
-    if (r == NULL) return NULL;
-
-    if (t->data != NULL) memcpy((void *) r->data, (void *) t->data, t->literal_size);
+    Tensor *r;
+    if (matIsTensorScalar(t)) {
+        r = matMakeScalar(t->data[0], NULL);
+    } else {
+        r = matMakeTensor(t->ndims, t->dimsz, e);
+        r->data = (double *) malloc(sizeof(double) * r->literal_size);
+        memcpy((void *) r->data, (void *) t->data, t->literal_size * sizeof(double));
+    }
 
     if (e != NULL) *e = MAT_NO_ERROR;
 
-    return t;
+    return r;
 }
 
 MatrixErr matTensorFit(Tensor *t1, Tensor *t2, Tensor **t1r, Tensor **t2r) {
@@ -244,14 +249,10 @@ double* matTensorAtI(Tensor *t, unsigned *ind, MatrixErr *e) {
 
 unsigned* matTensorIAt(Tensor *t, int literal, MatrixErr *e) {
     {
-        MatrixErr err;
-        if (matCheckTensor(t, &err) != MAT_NO_ERROR) {
-            if (e != NULL) *e = err;
-            return NULL;
-        }
+        if (matCheckTensor(t, e) != MAT_NO_ERROR) return NULL;
 
         if (literal >= t->literal_size) {
-            if (e != NULL) *e = err;
+            if (e != NULL) *e = MAT_DIMENSION_OUT_OF_RANGE;
             return NULL;
         }
     }
@@ -261,12 +262,25 @@ unsigned* matTensorIAt(Tensor *t, int literal, MatrixErr *e) {
     for (int i = 0; i < t->ndims; i++) {
         ind[i] = (literal / stride) % t->dimsz[i];
         stride *= t->dimsz[i];
-        // TODO: Could this be redundent?
-        literal -= ind[i];
     }
 
     if (e != NULL) *e = MAT_NO_ERROR;
     return ind;
+}
+
+MatrixErr matSum(double *src, int size, double *res) {
+    if (src == NULL) return MAT_NULL_PTR;
+    if (res == NULL) return MAT_NULL_PTR;
+
+    size_t gz[] = { size };
+    claRunKernel("sum", 1, gz, NULL,
+                 src, size, OCLREAD | OCLCPY,
+                 size,
+                 NULL, size, OCLWRITE | OCLREAD,
+                 res, 1, OCLWRITE | OCLOUT);
+    if (claGetError()) return MAT_KERNEL_FAILURE;
+
+    return MAT_NO_ERROR;
 }
 
 MatrixErr matProd(Tensor *t1, Tensor *t2, Tensor **r) {
@@ -361,41 +375,12 @@ MatrixErr matProd(Tensor *t1, Tensor *t2, Tensor **r) {
         return MAT_KERNEL_FAILURE;
     }
 
-    return MAT_NO_ERROR;
-}
-
-MatrixErr matMult(Tensor *t1, Tensor *t2, Tensor **r) {
-    if (r == NULL) return MAT_NULL_PTR;
-    *r = NULL;
-    {
-        MatrixErr err;
-        if (matCheckTensor(t1, &err) != MAT_NO_ERROR) return err;
-        if (matCheckTensor(t2, &err) != MAT_NO_ERROR) return err;
+    if (t1_vector && t2_vector) {
+        double sum;
+        matSum((*r)->data, (*r)->literal_size, &sum);
+        matFreeTensor(r);
+        *r = matMakeScalar(sum, NULL);
     }
-
-    Tensor *new_t1;
-    Tensor *new_t2;
-    if (matTensorFit(t1, t2, &new_t1, &new_t2)) return MAT_UNFIT_TENSORS;
-
-    // Standard kernel call in OCLAPI.
-    unsigned *rdimsz = (unsigned *) malloc(sizeof(unsigned) * new_t1->ndims);
-    for (int i = 0; i < new_t2->ndims; i++) 
-        rdimsz[i] = new_t2->dimsz[i];
-    rdimsz[0] = new_t1->dimsz[0];
-
-    *r = matMakeTensor(new_t1->ndims, rdimsz, NULL);
-    free(rdimsz);
-    Tensor *res = *r;
-    res->data = (double *) malloc(sizeof(double) * res->literal_size);
-
-    size_t gz[] = { res->literal_size };
-    claRunKernel("matmul", 1, gz, NULL,
-                 new_t1->data, new_t1->literal_size, OCLREAD | OCLCPY,
-                 new_t2->data, new_t2->literal_size, OCLREAD | OCLCPY,
-                 new_t1->dimsz[0], new_t2->dimsz[0],
-                 res->data, res->literal_size, OCLWRITE | OCLOUT,
-                 res->dimsz, res->ndims, OCLREAD | OCLCPY);
-    if (claGetError()) return MAT_KERNEL_FAILURE;
 
     return MAT_NO_ERROR;
 }
@@ -440,6 +425,89 @@ MatrixErr matDot(Tensor *t1, Tensor *t2, Tensor **r) {
                  res->data, res->literal_size, OCLWRITE | OCLOUT,
                  res->ndims, res->dimsz, res->ndims, OCLREAD | OCLCPY);
     if (claGetError()) return MAT_KERNEL_FAILURE;
+
+    return MAT_NO_ERROR;
+}
+
+MatrixErr _matSTDLinearCall(Tensor *t1, Tensor *t2, Tensor **r, const char *kname);
+
+MatrixErr _matSTDLinearCall(Tensor *t1, Tensor *t2, Tensor **r, const char *kname) {
+    if (r == NULL) return MAT_NULL_PTR;
+    *r = NULL;
+    {
+        MatrixErr err;
+        if (matCheckTensor(t1, &err) != MAT_NO_ERROR) return err;
+        if (matCheckTensor(t2, &err) != MAT_NO_ERROR) return err;
+    }
+
+    Tensor *new_t1;
+    Tensor *new_t2;
+    if (matTensorFit(t1, t2, &new_t1, &new_t2)) return MAT_UNFIT_TENSORS;
+
+    // Standard kernel call in OCLAPI.
+    unsigned *rdimsz = (unsigned *) malloc(sizeof(unsigned) * new_t1->ndims);
+    for (int i = 0; i < new_t2->ndims; i++) 
+        rdimsz[i] = new_t2->dimsz[i];
+    rdimsz[0] = new_t1->dimsz[0];
+
+    *r = matMakeTensor(new_t1->ndims, rdimsz, NULL);
+    free(rdimsz);
+    Tensor *res = *r;
+    res->data = (double *) malloc(sizeof(double) * res->literal_size);
+
+    size_t gz[] = { res->literal_size };
+    claRunKernel(kname, 1, gz, NULL,
+                 new_t1->data, new_t1->literal_size, OCLREAD | OCLCPY,
+                 new_t2->data, new_t2->literal_size, OCLREAD | OCLCPY,
+                 new_t1->dimsz[0], new_t2->dimsz[0],
+                 res->data, res->literal_size, OCLWRITE | OCLOUT,
+                 res->dimsz, res->ndims, OCLREAD | OCLCPY);
+    if (claGetError()) return MAT_KERNEL_FAILURE;
+
+    return MAT_NO_ERROR;
+}
+
+MatrixErr matAdd(Tensor *t1, Tensor *t2, Tensor **r) {
+    return _matSTDLinearCall(t1, t2, r, "matadd");
+}
+
+MatrixErr matSub(Tensor *t1, Tensor *t2, Tensor **r) {
+    return _matSTDLinearCall(t1, t2, r, "matsub");
+}
+
+MatrixErr matMult(Tensor *t1, Tensor *t2, Tensor **r) {
+    return _matSTDLinearCall(t1, t2, r, "matmul");
+}
+
+// PERF: LONG TERM : making a "numpy view"-like implementation, just like previus commits.
+MatrixErr matTTensor(Tensor *t, Tensor **r) {
+    {
+        MatrixErr err;
+        if (matCheckTensor(t, &err)) return err;
+    }
+    if (r == NULL) return MAT_NULL_PTR;
+    *r = NULL;
+
+    unsigned *dimsz = (unsigned *) malloc(sizeof(unsigned) * t->ndims);
+    dimsz[0] = t->dimsz[t->ndims - 1];
+    for (int i = 1; i < t->ndims; i++) dimsz[i] = t->dimsz[i - 1];
+
+    Tensor *res = matMakeTensor(t->ndims, dimsz, NULL);
+    res->data = (double *) malloc(sizeof(double) * res->literal_size);
+    free(dimsz);
+
+    // Copy the data, offset.
+    for (int i = 0; i < t->literal_size; i++) {
+        unsigned *ind = matTensorIAt(t, i, NULL);
+
+        unsigned last = ind[t->ndims - 1];
+        for (int j = t->ndims; j --> 0;) ind[j] = ind[j - 1];
+        ind[0] = last;
+        
+        *matTensorAtI(res, ind, NULL) = t->data[i];
+
+        free(ind);
+    }
 
     return MAT_NO_ERROR;
 }

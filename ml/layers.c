@@ -4,6 +4,7 @@
 
 MLErr mlFullyConnectedInitialize(Layer *self) {
     if (self->weights == NULL) return ML_LAYER_INVALID_WEIGHTS;
+    if (((Tensor *)self->weights)->ndims != 2) return ML_LAYER_INVALID_WEIGHTS;
 
     return ML_NO_ERR;
 }
@@ -11,8 +12,7 @@ MLErr mlFullyConnectedInitialize(Layer *self) {
 MLErr mlFullyConnectedCleanup(Layer *self) {
     self->parameters = NULL;
 
-    freeMatrix2((Matrix2 *) self->weights);
-    self->weights = NULL;
+    matFreeTensor((Tensor **) &self->weights);
     self->_cache = NULL;
     self->error = 0;
 
@@ -20,39 +20,32 @@ MLErr mlFullyConnectedCleanup(Layer *self) {
 }
 
 MLErr mlFullyConnectedForward(Layer *self, Tensor input, Tensor **output) {
-    Matrix2 *weights = (Matrix2 *) self->weights;
-    Matrix2 *input2 = matTensorAsMatrix2(input, input.literal_size, 1);
-    Matrix2 *res;
+    Tensor *weights = (Tensor *) self->weights;
+    Tensor *inputf = matTensorFlatten(&input, NULL);
+    Tensor *res;
 
-    MatrixErr e = matMul(*input2, *weights, &res);
+    MatrixErr e = matDot(weights, inputf, &res);
 
     switch (e) {
         case MAT_NO_ERROR: break;
         case MAT_DIMENSION_MISTMATCH:
-            freeMatrix2(input2);
-            input2 = NULL;
-            freeMatrix2(res);
-            res = NULL;
+            matFreeTensor(&inputf);
+            matFreeTensor(&res);
             self->error = e;
 
             return ML_LAYER_INVALID_INPUT_DIMS;
 
         default:
-            freeMatrix2(input2);
-            input2 = NULL;
-            freeMatrix2(res);
-            res = NULL;
+            matFreeTensor(&inputf);
+            matFreeTensor(&res);
             self->error = e;
 
             return ML_LAYER_INTERNAL_ERROR;
     }
 
-    *output = mat2AsTensor(*res);
+    *output = res;
 
-    freeMatrix2(input2);
-    input2 = NULL;
-    freeMatrix2(res);
-    res = NULL;
+    matFreeTensor(&inputf);
 
     return ML_NO_ERR;
 }
@@ -60,51 +53,45 @@ MLErr mlFullyConnectedForward(Layer *self, Tensor input, Tensor **output) {
 MLErr mlFullyConnectedDerive(Layer *self, Tensor upstream_derivatives, Tensor activation, Tensor **downstream_derivative, Tensor **self_derivative) {
     if (downstream_derivative == NULL) return ML_NULL_PTR;
     *downstream_derivative = NULL;
-    if (downstream_derivative == NULL) return ML_NULL_PTR;
+    if (self_derivative == NULL) return ML_NULL_PTR;
     *self_derivative = NULL;
 
     // self_derivative = activations * upstream_derivatives
-    Matrix2 *activation2 = matTensorAsMatrix2(activation, 1, activation.literal_size);
+    Tensor *activationf = matTensorFlatten(&activation, NULL);
     // HACK: Is this correct? In GD it certainly is, but does it apply to any context?
-    Matrix2 *upstream_derivatives2 = matTensorAsMatrix2(upstream_derivatives, upstream_derivatives.literal_size, 1);
-    Matrix2 *res;
+    Tensor *upstream_derivativesf = matTensorFlatten(&upstream_derivatives, NULL);
+    Tensor *res;
 
-    MatrixErr e = matMul(*activation2, *upstream_derivatives2, &res);
+    MatrixErr e = matProd(activationf, upstream_derivativesf, &res);
 
     switch (e) {
         case MAT_NO_ERROR: break;
         default:
-            freeMatrix2(activation2);
-            activation2 = NULL;
-            freeMatrix2(upstream_derivatives2);
-            upstream_derivatives2 = NULL;
+            matFreeTensor(&activationf);
+            matFreeTensor(&upstream_derivativesf);
 
             self->error = e;
 
             return ML_LAYER_INTERNAL_ERROR;
     }
     
-    *self_derivative = mat2AsTensor(*res);
+    *self_derivative = res;
 
-    freeMatrix2(activation2);
-    activation2 = NULL;
-    freeMatrix2(upstream_derivatives2);
-    upstream_derivatives2 = NULL;
+    matFreeTensor(&activationf);
+    matFreeTensor(&upstream_derivativesf);
 
-    // downstream_derivative = self->weights * upstream_derivatives
-    Tensor *weightsn = mat2AsTensor(*(Matrix2 *) self->weights);
-    Tensor *weightsnT = matTTensor(*weightsn);
+    // downstream_derivative = self->weights' * upstream_derivatives
+    Tensor *weightsnT;
+    matTTensor((Tensor *) self->weights, &weightsnT);
+
     Tensor *downstream;
     
-    e = matDot(*weightsnT, upstream_derivatives, &downstream);
+    e = matDot(weightsnT, &upstream_derivatives, &downstream);
 
     switch (e) {
         case MAT_NO_ERROR: break;
         default:
-            freeTensor(weightsn);
-            weightsn = NULL;
-            freeTensor(weightsnT);
-            weightsnT = NULL;
+            matFreeTensor(&weightsnT);
 
             self->error = e;
 
@@ -113,10 +100,7 @@ MLErr mlFullyConnectedDerive(Layer *self, Tensor upstream_derivatives, Tensor ac
     
     *downstream_derivative = downstream;
 
-    freeTensor(weightsn);
-    weightsn = NULL;
-    freeTensor(weightsnT);
-    weightsnT = NULL;
+    matFreeTensor(&weightsnT);
 
     return ML_NO_ERR;
 }
@@ -126,15 +110,13 @@ MLErr mlFullyConnectedUpdate(Layer *self, Tensor self_derivative) {
     // HACK: matPrintTensor(self_derivative);
     
     Tensor *new_weights;
-    Tensor *weightsn = mat2AsTensor(*((Matrix2 *) self->weights));
-    matSubT(*weightsn, self_derivative, &new_weights);
+    Tensor *weights = (Tensor *) self->weights;
     
-    Matrix2 *new_weights2 = matTensorAsMatrix2(*new_weights, weightsn->dimsz[0], weightsn->dimsz[1]);
+    matSub(weights, &self_derivative, &new_weights);
+    
+    self->weights = (void *) new_weights;
 
-    self->weights = (void *) new_weights2;
-
-    freeTensor(weightsn);
-    freeTensor(new_weights);
+    matFreeTensor(&weights);
 
     // HACK: matPrintMatrix2(*(Matrix2 *) self->weights);
 
@@ -159,7 +141,7 @@ MLErr mlBiasCleanup(Layer *self) {
 MLErr mlBiasForward(Layer *self, Tensor input, Tensor **output) {
     Tensor *w = (Tensor *) self->weights;
 
-    MatrixErr error = matAddT(*w, input, output);
+    MatrixErr error = matAdd(w, &input, output);
     if (error != MAT_NO_ERROR) {
         
         self->error = error;
@@ -181,13 +163,13 @@ MLErr mlBiasDerive(Layer *self, Tensor upstream_derivatives, Tensor activation, 
     // self_derivative = sum(upstream_derivatives)
     // downstream_derivative = upstream_derivatives
     
-    *downstream_derivative = matTensorDeepCopy(upstream_derivatives);
+    *downstream_derivative = matTensorDeepCopy(&upstream_derivatives, NULL);
 
     Tensor *w = (Tensor *) self->weights;
     Tensor *ones = mlWeightInitializer(ML_WEIGHT_INITIALIZER_ONES, w->ndims, w->dimsz);
-    MatrixErr error = matDot(upstream_derivatives, *ones, self_derivative);
+    MatrixErr error = matDot(&upstream_derivatives, ones, self_derivative);
 
-    freeTensor(ones);
+    matFreeTensor(&ones);
     
     if (error != MAT_NO_ERROR) {
         
@@ -204,7 +186,7 @@ MLErr mlBiasUpdate(Layer *self, Tensor self_derivative) {
     Tensor *new_weights;
     Tensor *weightsn = (Tensor *) self->weights;
 
-    MatrixErr error = matSubT(*weightsn, self_derivative, &new_weights);
+    MatrixErr error = matSub(weightsn, &self_derivative, &new_weights);
     if (error != MAT_NO_ERROR) {
         self->error = error;
 
@@ -213,7 +195,7 @@ MLErr mlBiasUpdate(Layer *self, Tensor self_derivative) {
     
     self->weights = (void *) new_weights;
 
-    freeTensor(weightsn);
+    matFreeTensor(&weightsn);
 
     return ML_NO_ERR;
 }
@@ -259,7 +241,7 @@ MLErr mlMeanSquaredErrorCleanup(Layer *self) {
 }
 
 MLErr mlMeanSquaredErrorForward(Layer *self, Tensor input, Tensor **output) {
-    *output = matTensorDeepCopy(input);
+    *output = matTensorDeepCopy(&input, NULL);
 
     return ML_NO_ERR;
 }
@@ -269,7 +251,7 @@ MLErr mlMeanSquaredErrorDerive(Layer *self, Tensor upstream_derivatives, Tensor 
     // activation = actual output
     // downstream_derivative = error_function_DERIVATIVE(actual output, desired output)
 
-    MatrixErr error = matSubT(activation, upstream_derivatives, downstream_derivative);
+    MatrixErr error = matSub(&activation, &upstream_derivatives, downstream_derivative);
     if (error != MAT_NO_ERROR) {
         
         self->error = error;
@@ -278,7 +260,7 @@ MLErr mlMeanSquaredErrorDerive(Layer *self, Tensor upstream_derivatives, Tensor 
     }
     
     // self_derivative is never used.
-    *self_derivative = matMakeTensorScalar(-1);
+    *self_derivative = matMakeScalar(-1.0, NULL);
 
     return ML_NO_ERR;
 }

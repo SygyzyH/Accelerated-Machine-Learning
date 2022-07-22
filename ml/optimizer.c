@@ -22,8 +22,8 @@ MLErr mlTrainInstance(LearningInstance *instance) {
 #define freeActivationsDerivatives \
     for (int i = 0; i < instance->input_n; i++) { \
         for (int j = 0; j < src_machine.layer_count; j++) { \
-            if (j != 0) freeTensorD(activations[i][j]); \
-            freeTensorD(derivatives[i][j]); \
+            if (j != 0) matFreeTensorD(activations[i][j]); \
+            matFreeTensorD(derivatives[i][j]); \
         } \
         free(activations[i]); \
         activations[i] = NULL; \
@@ -45,8 +45,7 @@ MLErr mlTrainInstance(LearningInstance *instance) {
 
                 freeActivationsDerivatives;
                 
-                freeTensor(current_output);
-                current_output = NULL;
+                matFreeTensor(&current_output);
                 return error;
             }
 
@@ -54,7 +53,7 @@ MLErr mlTrainInstance(LearningInstance *instance) {
             current_inp = current_output;
         }
 
-        freeTensor(current_output);
+        matFreeTensor(&current_output);
 
         // The value in current_output is the final output of the machine.
         // If the final value is needed outside of this context, the last activation should also be the last value, since:
@@ -69,17 +68,14 @@ MLErr mlTrainInstance(LearningInstance *instance) {
 
         for (int layeri = src_machine.layer_count - 1; layeri >= 0; layeri--) {
             MLErr error = src_machine.layers[layeri]->derive(src_machine.layers[layeri], *curr_deriv, activations[inp_num][layeri], &next_deriv, &self_deriv);
-            if (curr_deriv != err_deriv) freeTensor(curr_deriv);
+            if (curr_deriv != err_deriv) matFreeTensor(&curr_deriv);
             if (error != ML_NO_ERR) {
 
                 freeActivationsDerivatives;
                 
-                freeTensor(curr_deriv);
-                curr_deriv = NULL;
-                freeTensor(next_deriv);
-                next_deriv = NULL;
-                freeTensor(self_deriv);
-                self_deriv = NULL;
+                matFreeTensor(&curr_deriv);
+                matFreeTensor(&next_deriv);
+                matFreeTensor(&self_deriv);
                 return error;
             }
 
@@ -88,7 +84,7 @@ MLErr mlTrainInstance(LearningInstance *instance) {
         } 
         // The final derivative is not needed, its the derivative
         // of the previous layer, but this is the last layer.
-        freeTensor(next_deriv);
+        matFreeTensor(&next_deriv);
 
         // Run the optimizer. It is responsible for updating the weights.
         instance->optimizer(instance, activations[inp_num], derivatives[inp_num]);
@@ -101,11 +97,11 @@ MLErr mlTrainInstance(LearningInstance *instance) {
 
 MLErr mlSGD(LearningInstance *self, Tensor *activations, Tensor *derivatives) {
     // Multiply each derivative by the loss
-    Tensor *learning_rate = matMakeTensorScalar(*(double *) self->hyper_parameters);
+    Tensor *learning_rate = matMakeScalar(*(double *) self->hyper_parameters, NULL);
     Tensor *new_derivs = (Tensor *) malloc(sizeof(Tensor) * self->src_machine.layer_count);
     for (int i = 0; i < self->src_machine.layer_count; i++) {
         Tensor *new_deriv;
-        matDot(derivatives[i], *learning_rate, &new_deriv);
+        matDot(&derivatives[i], learning_rate, &new_deriv);
         new_derivs[i] = *new_deriv;
     }
 
@@ -118,7 +114,7 @@ MLErr mlSGD(LearningInstance *self, Tensor *activations, Tensor *derivatives) {
 
 Exit:
     // Free new_deriv
-    for (int i = 0; i < self->src_machine.layer_count; i++) freeTensorD(new_derivs[i]);
+    for (int i = 0; i < self->src_machine.layer_count; i++) matFreeTensorD(new_derivs[i]);
     free(new_derivs);
 
     return error;
