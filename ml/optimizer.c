@@ -10,7 +10,7 @@ MLErr mlTrainInstance(LearningInstance *instance) {
 
     // First, collect the activations.
     // activations is an `input_n x layer_count` array of activations.
-    // NOTE: `activations[0] = input` 
+    // NOTE: `activations[0] = input`
     Tensor **activations = (Tensor **) malloc(sizeof(Tensor *) * instance->input_n);
     Tensor **derivatives = (Tensor **) malloc(sizeof(Tensor *) * instance->input_n);
     for (int i = 0; i < instance->input_n; i++)
@@ -76,6 +76,7 @@ MLErr mlTrainInstance(LearningInstance *instance) {
                 matFreeTensor(&curr_deriv);
                 matFreeTensor(&next_deriv);
                 matFreeTensor(&self_deriv);
+
                 return error;
             }
 
@@ -109,7 +110,7 @@ MLErr mlSGD(LearningInstance *self, Tensor *activations, Tensor *derivatives) {
     // Update each layer with its derivative
     for (int i = 0; i < self->src_machine.layer_count; i++)  {
         error = self->src_machine.layers[i]->update(self->src_machine.layers[i], new_derivs[i]);
-        if (error != ML_NO_ERR) {puts("errr"); goto Exit;}
+        if (error != ML_NO_ERR) goto Exit;
     }
 
 Exit:

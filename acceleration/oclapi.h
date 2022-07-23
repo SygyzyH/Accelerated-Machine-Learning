@@ -42,8 +42,8 @@ OCLAPIErr claInit();
 OCLAPIErr claCln();
 OCLAPIErr claRegisterFromSrc(const char **src, int kerneln, ...);
 OCLAPIErr claRunKernel(const char *name, int wdim, size_t *gsz, size_t *lsz, ...);
-OCLAPIErr claGetError();
-cl_int claGetExtendedError();
+OCLAPIErr claGetError(int perserve);
+cl_int claGetExtendedError(int perserve);
 
 // Returns OCLAPI error as string
 /*

@@ -13,43 +13,34 @@ int main() {
 
     error = claInit();
     printf("err: %s\n", claGetErrorString(error));
-    printf("oclapi internal: %s\n", clGetErrorString(claGetExtendedError()));
+    printf("oclapi internal: %s\n", clGetErrorString(claGetExtendedError(1)));
 
     error = matInit();
 
-    /*Tensor *t1 = matMakeTensor(1, (unsigned []) { 2, 3, 3, 3 }, (MatrixErr *) &error);
-    t1->data = (double *) malloc(sizeof(double) * t1->literal_size);
-    for (int i = 0; i < t1->literal_size; i++) t1->data[i] = i;
-    matTensorPrint(t1);
+    Tensor *l1w = matMakeTensor(2, (unsigned []) { 2, 2 }, NULL);
+    Tensor *l2w = matMakeTensor(2, (unsigned []) { 2, 1 }, NULL);
+    l1w->data = (double []) { 0.11, 0.21, 0.12, 0.08 };
+    l2w->data = (double []) { 0.14, 0.15 };
 
-    Tensor *t2 = matMakeTensor(3, (unsigned []) { 3, 2, 3, 3 }, (MatrixErr *) &error);
-    t2->data = (double *) malloc(sizeof(double) * t2->literal_size);
-    for (int i = 0; i < t2->literal_size; i++) t2->data[i] = i;
-    matTensorPrint(t2);
-
-    Tensor *c = matMakeScalar(20, (MatrixErr *) &error);
-    //matTensorPrint(c);
-
-    Tensor *r;
-    printf("product error: %s\n", matGetErrorString(matProd(t1, t2, &r)));
-    matTensorPrint(r);*/
-    
     Machine m = mlMakeMachine(3, (Layer *[]) {
-                                mlMakeLayer(FullyConnected, NULL, mlWeightInitializer(ML_WEIGHT_INITIALIZER_ONES, 2, (unsigned []) { 2, 2 })),
-                                mlMakeLayer(FullyConnected, NULL, mlWeightInitializer(ML_WEIGHT_INITIALIZER_ONES, 2, (unsigned []) { 2, 1 })),
+                                mlMakeLayer(FullyConnected, NULL, l1w),
+                                mlMakeLayer(FullyConnected, NULL, l2w),
                                 mlMakeLayer(MeanSquaredError, NULL, NULL)
-                              });
+                            });
 
     Tensor *inp = matMakeTensor(1, (unsigned []) { 2 }, NULL);
-    inp->data = (double *) malloc(sizeof(double) * inp->literal_size);
-    for (int i = 0; i < inp->literal_size; i++) inp->data[i] = (double) i;
-    puts("input:");
-    matTensorPrint(inp);
+    inp->data = (double []) { 2, 3 };
+
+    Tensor *desired_output = matMakeScalar(1, NULL);
+    double learning_rate = 0.05;
+
+    LearningInstance *inst = mlMakeLearningInstance(m, &learning_rate, 1, inp, desired_output, SGD);
+    // TODO: As expected from my lackluster error checking, this segfaults.
+    for (int i = 0; i < 100; i++) mlTrainInstance(inst);
+    
     Tensor *res = NULL;
 
     mlMachineFeedForward(m, inp, &res);
-    //m.layers[1]->forward(m.layers[1], *inp, &res);
-    //mlMeanSquaredErrorForward(m.layers[0], *inp, &res);
 
     puts("output:");
     matTensorPrint(res);

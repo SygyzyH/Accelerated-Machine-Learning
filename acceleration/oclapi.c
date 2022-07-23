@@ -58,9 +58,9 @@ _oclapi_Klist *kernels = NULL;
 /*
 returns the last error and reset it
 */
-OCLAPIErr claGetError() {
+OCLAPIErr claGetError(int perserve) {
     OCLAPIErr e = oclerr;
-    oclerr = OCL_NO_ERR;
+    if (!perserve) oclerr = OCL_NO_ERR;
     return e;
 }
 
@@ -68,9 +68,9 @@ OCLAPIErr claGetError() {
 /*
 returns the last OpenCL error and reset it
 */
-cl_int claGetExtendedError() {
+cl_int claGetExtendedError(int perserve) {
     cl_int e = clerr;
-    clerr = CL_SUCCESS;
+    if (!perserve) clerr = CL_SUCCESS;
     return e;
 }
 

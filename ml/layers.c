@@ -62,13 +62,14 @@ MLErr mlFullyConnectedDerive(Layer *self, Tensor upstream_derivatives, Tensor ac
     Tensor *upstream_derivativesf = matTensorFlatten(&upstream_derivatives, NULL);
     Tensor *res;
 
-    MatrixErr e = matProd(activationf, upstream_derivativesf, &res);
+    MatrixErr e = matDot(activationf, upstream_derivativesf, &res);
 
     switch (e) {
         case MAT_NO_ERROR: break;
         default:
             matFreeTensor(&activationf);
             matFreeTensor(&upstream_derivativesf);
+            printf_m("%s\n", matGetErrorString(e));
 
             self->error = e;
 
@@ -91,6 +92,7 @@ MLErr mlFullyConnectedDerive(Layer *self, Tensor upstream_derivatives, Tensor ac
     switch (e) {
         case MAT_NO_ERROR: break;
         default:
+            matTensorPrint(weightsnT);
             matFreeTensor(&weightsnT);
 
             self->error = e;
@@ -115,10 +117,6 @@ MLErr mlFullyConnectedUpdate(Layer *self, Tensor self_derivative) {
     matSub(weights, &self_derivative, &new_weights);
     
     self->weights = (void *) new_weights;
-
-    matFreeTensor(&weights);
-
-    // HACK: matPrintMatrix2(*(Matrix2 *) self->weights);
 
     return ML_NO_ERR;
 }
@@ -253,7 +251,6 @@ MLErr mlMeanSquaredErrorDerive(Layer *self, Tensor upstream_derivatives, Tensor 
 
     MatrixErr error = matSub(&activation, &upstream_derivatives, downstream_derivative);
     if (error != MAT_NO_ERROR) {
-        
         self->error = error;
 
         return ML_LAYER_INTERNAL_ERROR;

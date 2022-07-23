@@ -12,7 +12,7 @@
 #undef printf_m
 #endif
 #include <strings.h>
-#define printf_m(str, ...) fprintf(stderr, "MAT_H: %s: Error: " str, __func__, __VA_ARGS__)
+#define printf_m(str, ...) fprintf(stderr, "MAT_H: %s: Error: " str, __func__, ##__VA_ARGS__)
 #else
 #define printf_m(str, ...)
 #endif
@@ -82,8 +82,8 @@ static const char* matGetErrorString(MatrixErr error) {
 /*
  * Resets the last OpenCL API error and return it.
  * */
-static inline cl_int matGetExtendedError() {
-    return claGetExtendedError();
+static inline cl_int matGetExtendedError(int perserve) {
+    return claGetExtendedError(perserve);
 }
 
 static void matFreeTensor(Tensor **t) {
@@ -129,10 +129,8 @@ static inline Tensor* matMakeScalar(double s, MatrixErr *e) {
     Tensor *t = matMakeTensor(0, NULL, e);
     // NOTE: Redundent if.
     if (t != NULL) {
-        t->dimsz = (unsigned *) malloc(sizeof(unsigned));
         t->data = (double *) malloc(sizeof(double));
         t->data[0] = s;
-        t->dimsz[0] = 1;
     }
     
     return t;
