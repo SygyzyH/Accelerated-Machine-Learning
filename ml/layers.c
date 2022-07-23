@@ -147,13 +147,6 @@ MLErr mlBiasForward(Layer *self, Tensor input, Tensor **output) {
         return ML_LAYER_INTERNAL_ERROR;
     }
 
-    /* HACK: puts("====input");
-    matPrintTensor(input);
-    puts("====weights");
-    matPrintTensor(*w);
-    puts("====output");
-    matPrintTensor(**output);*/
-
     return ML_NO_ERR;
 }
 

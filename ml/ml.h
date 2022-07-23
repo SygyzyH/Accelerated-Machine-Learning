@@ -13,6 +13,7 @@ typedef enum {
     ML_LAYER_INVALID_INPUT_DIMS,
     ML_LAYER_INTERNAL_ERROR,
     ML_MACHINE_UNINITIALIZED_LAYER,
+    ML_OPTIMIZER_UNEXPECTED_DIMS,
     ML_MAT_ERROR,
     ML_NULL_PTR
 } MLErr;
@@ -25,6 +26,7 @@ static const char* mlGetErrorString(MLErr error) {
         case ML_LAYER_INVALID_INPUT_DIMS: return "ML_LAYER_INVALID_INPUT_DIMS";
         case ML_LAYER_INTERNAL_ERROR: return "ML_LAYER_INTERNAL_ERROR";
         case ML_MACHINE_UNINITIALIZED_LAYER: return "ML_MACHINE_UNINITIALIZED_LAYER";
+        case ML_OPTIMIZER_UNEXPECTED_DIMS: return "ML_OPTIMIZER_UNEXPECTED_DIMS";
         case ML_NULL_PTR: return "ML_NULL_PTR";
         default: return "Unknown ML Error";
     }

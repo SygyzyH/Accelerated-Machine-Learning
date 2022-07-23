@@ -35,8 +35,8 @@ int main() {
     double learning_rate = 0.05;
 
     LearningInstance *inst = mlMakeLearningInstance(m, &learning_rate, 1, inp, desired_output, SGD);
-    // TODO: As expected from my lackluster error checking, this segfaults.
-    for (int i = 0; i < 69; i++) mlTrainInstance(inst);
+    //for (int i = 0; i < 69; i++) 
+    printf("terr: %s\n", mlGetErrorString(mlTrainInstance(inst)));
     
     Tensor *res = NULL;
 

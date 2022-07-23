@@ -13,10 +13,20 @@ MLErr mlTrainInstance(LearningInstance *instance) {
     // NOTE: `activations[0] = input`
     Tensor **activations = (Tensor **) malloc(sizeof(Tensor *) * instance->input_n);
     Tensor **derivatives = (Tensor **) malloc(sizeof(Tensor *) * instance->input_n);
-    for (int i = 0; i < instance->input_n; i++)
+    for (int i = 0; i < instance->input_n; i++) {
         activations[i] = (Tensor *) malloc(sizeof(Tensor) * src_machine.layer_count);
-    for (int i = 0; i < instance->input_n; i++)
         derivatives[i] = (Tensor *) malloc(sizeof(Tensor) * src_machine.layer_count);
+    }
+    
+    // Make sure that when data is freed on panic, itll free NULL instead of junk.
+    for (int i = 0; i < instance->input_n; i++) 
+        for (int j = 0; j < src_machine.layer_count; j++) {
+            activations[i][j].dimsz = NULL;
+            activations[i][j].data = NULL;
+
+            derivatives[i][j].dimsz = NULL;
+            derivatives[i][j].data = NULL;
+        }
 
     // Clearer free of activations and derivatives. 
 #define freeActivationsDerivatives \
@@ -52,6 +62,26 @@ MLErr mlTrainInstance(LearningInstance *instance) {
             activations[inp_num][layeri] = *current_inp;
             current_inp = current_output;
         }
+        
+        // Check if the output is the same shape as the expected output
+        if (current_output->ndims != instance->target_outputs[inp_num].ndims) {
+
+            freeActivationsDerivatives;
+
+            matFreeTensor(&current_output);
+            
+            return ML_OPTIMIZER_UNEXPECTED_DIMS;
+        }
+
+        for (int dim = 0; dim < current_output->ndims; dim++)
+            if (current_output->dimsz[dim] != instance->target_outputs[inp_num].dimsz[dim]) {
+                
+                freeActivationsDerivatives;
+
+                matFreeTensor(&current_output);
+                
+                return ML_OPTIMIZER_UNEXPECTED_DIMS;
+            }
 
         matFreeTensor(&current_output);
 
