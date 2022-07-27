@@ -15,7 +15,7 @@ MLErr mlMachineFeedForward(Machine machine, Tensor *input, Tensor **output) {
     Tensor *current_output = NULL;
 
     for (int layeri = 0; layeri < machine.layer_count; layeri++) {
-        MLErr error = machine.layers[layeri]->forward(machine.layers[layeri], *current_inp, &current_output);
+        MLErr error = machine.layers[layeri]->forward(machine.layers[layeri], current_inp, &current_output);
         if (current_inp != input) matFreeTensor(&current_inp);
         if (error != ML_NO_ERR) {
             matFreeTensor(&current_output);

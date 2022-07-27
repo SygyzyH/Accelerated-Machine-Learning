@@ -149,4 +149,17 @@ static inline Tensor* matTensorFlatten(Tensor *t, MatrixErr *e) {
     return r;
 }
 
+static inline void matTensorReduce(Tensor *t) {
+    unsigned new_ndims = 0;
+    for (int i = 0; i < t->ndims; i++) if (t->dimsz[i] != 1) new_ndims++;
+    
+    unsigned *new_dimsz = (unsigned *) malloc(sizeof(unsigned) * new_ndims);
+    unsigned ind = 0;
+    for (int i = 0; i < t->ndims; i++) if (t->dimsz[i] != 1) new_dimsz[ind++] = t->dimsz[i];
+
+    free(t->dimsz);
+    t->dimsz = new_dimsz;
+    t->ndims = new_ndims;
+}
+
 #endif

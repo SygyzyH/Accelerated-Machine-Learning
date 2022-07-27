@@ -11,29 +11,26 @@ MLErr mlTrainInstance(LearningInstance *instance) {
     // First, collect the activations.
     // activations is an `input_n x layer_count` array of activations.
     // NOTE: `activations[0] = input`
-    Tensor **activations = (Tensor **) malloc(sizeof(Tensor *) * instance->input_n);
-    Tensor **derivatives = (Tensor **) malloc(sizeof(Tensor *) * instance->input_n);
+    Tensor ***activations = (Tensor ***) malloc(sizeof(Tensor **) * instance->input_n);
+    Tensor ***derivatives = (Tensor ***) malloc(sizeof(Tensor **) * instance->input_n);
     for (int i = 0; i < instance->input_n; i++) {
-        activations[i] = (Tensor *) malloc(sizeof(Tensor) * src_machine.layer_count);
-        derivatives[i] = (Tensor *) malloc(sizeof(Tensor) * src_machine.layer_count);
+        activations[i] = (Tensor **) malloc(sizeof(Tensor *) * src_machine.layer_count);
+        derivatives[i] = (Tensor **) malloc(sizeof(Tensor *) * src_machine.layer_count);
     }
     
     // Make sure that when data is freed on panic, itll free NULL instead of junk.
     for (int i = 0; i < instance->input_n; i++) 
         for (int j = 0; j < src_machine.layer_count; j++) {
-            activations[i][j].dimsz = NULL;
-            activations[i][j].data = NULL;
-
-            derivatives[i][j].dimsz = NULL;
-            derivatives[i][j].data = NULL;
+            activations[i][j] = NULL;
+            derivatives[i][j] = NULL;
         }
 
     // Clearer free of activations and derivatives. 
 #define freeActivationsDerivatives \
     for (int i = 0; i < instance->input_n; i++) { \
         for (int j = 0; j < src_machine.layer_count; j++) { \
-            if (j != 0) matFreeTensorD(activations[i][j]); \
-            matFreeTensorD(derivatives[i][j]); \
+            if (j != 0) matFreeTensor(&activations[i][j]); \
+            matFreeTensor(&derivatives[i][j]); \
         } \
         free(activations[i]); \
         activations[i] = NULL; \
@@ -50,7 +47,7 @@ MLErr mlTrainInstance(LearningInstance *instance) {
         Tensor *current_output = NULL;
 
         for (int layeri = 0; layeri < src_machine.layer_count; layeri++) {
-            MLErr error = src_machine.layers[layeri]->forward(src_machine.layers[layeri], *current_inp, &current_output);
+            MLErr error = src_machine.layers[layeri]->forward(src_machine.layers[layeri], current_inp, &current_output);
             if (error != ML_NO_ERR) {
 
                 freeActivationsDerivatives;
@@ -59,7 +56,7 @@ MLErr mlTrainInstance(LearningInstance *instance) {
                 return error;
             }
 
-            activations[inp_num][layeri] = *current_inp;
+            activations[inp_num][layeri] = current_inp;
             current_inp = current_output;
         }
         
@@ -97,7 +94,7 @@ MLErr mlTrainInstance(LearningInstance *instance) {
         Tensor *self_deriv = NULL;
 
         for (int layeri = src_machine.layer_count - 1; layeri >= 0; layeri--) {
-            MLErr error = src_machine.layers[layeri]->derive(src_machine.layers[layeri], *curr_deriv, activations[inp_num][layeri], &next_deriv, &self_deriv);
+            MLErr error = src_machine.layers[layeri]->derive(src_machine.layers[layeri], curr_deriv, activations[inp_num][layeri], &next_deriv, &self_deriv);
             if (curr_deriv != err_deriv) matFreeTensor(&curr_deriv);
             if (error != ML_NO_ERR) {
 
@@ -110,7 +107,7 @@ MLErr mlTrainInstance(LearningInstance *instance) {
                 return error;
             }
 
-            derivatives[inp_num][layeri] = *self_deriv;
+            derivatives[inp_num][layeri] = self_deriv;
             curr_deriv = next_deriv;
         } 
         // The final derivative is not needed, its the derivative
@@ -126,27 +123,21 @@ MLErr mlTrainInstance(LearningInstance *instance) {
     return ML_NO_ERR;
 }
 
-MLErr mlSGD(LearningInstance *self, Tensor *activations, Tensor *derivatives) {
-    // Multiply each derivative by the loss
+MLErr mlSGD(LearningInstance *self, Tensor **activations, Tensor **derivatives) {
     Tensor *learning_rate = matMakeScalar(*(double *) self->hyper_parameters, NULL);
-    Tensor *new_derivs = (Tensor *) malloc(sizeof(Tensor) * self->src_machine.layer_count);
-    for (int i = 0; i < self->src_machine.layer_count; i++) {
-        Tensor *new_deriv;
-        matDot(&derivatives[i], learning_rate, &new_deriv);
-        new_derivs[i] = *new_deriv;
-    }
-
-    MLErr error;
+    int error = ML_NO_ERR;
+    
     // Update each layer with its derivative
     for (int i = 0; i < self->src_machine.layer_count; i++)  {
-        error = self->src_machine.layers[i]->update(self->src_machine.layers[i], new_derivs[i]);
-        if (error != ML_NO_ERR) goto Exit;
-    }
+        // Multiply each derivative by the learning rate
+        Tensor *new_deriv = NULL;
+        error = matDot(learning_rate, derivatives[i], &new_deriv);
+        if (error != MAT_NO_ERROR) return ML_OPTIMIZER_INTERNAL_ERORR;
 
-Exit:
-    // Free new_deriv
-    for (int i = 0; i < self->src_machine.layer_count; i++) matFreeTensorD(new_derivs[i]);
-    free(new_derivs);
+        error = self->src_machine.layers[i]->update(self->src_machine.layers[i], new_deriv);
+        matFreeTensor(&new_deriv);
+        if (error != ML_NO_ERR) return error;
+    }
 
     return error;
 }

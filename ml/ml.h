@@ -14,6 +14,7 @@ typedef enum {
     ML_LAYER_INTERNAL_ERROR,
     ML_MACHINE_UNINITIALIZED_LAYER,
     ML_OPTIMIZER_UNEXPECTED_DIMS,
+    ML_OPTIMIZER_INTERNAL_ERORR,
     ML_MAT_ERROR,
     ML_NULL_PTR
 } MLErr;
@@ -27,6 +28,7 @@ static const char* mlGetErrorString(MLErr error) {
         case ML_LAYER_INTERNAL_ERROR: return "ML_LAYER_INTERNAL_ERROR";
         case ML_MACHINE_UNINITIALIZED_LAYER: return "ML_MACHINE_UNINITIALIZED_LAYER";
         case ML_OPTIMIZER_UNEXPECTED_DIMS: return "ML_OPTIMIZER_UNEXPECTED_DIMS";
+        case ML_OPTIMIZER_INTERNAL_ERORR: return "ML_OPTIMIZER_INTERNAL_ERORR";
         case ML_NULL_PTR: return "ML_NULL_PTR";
         default: return "Unknown ML Error";
     }
@@ -45,9 +47,9 @@ typedef struct layer {
     // freeing it.
     void *weights;
     
-    MLErr (*forward)(struct layer *self, Tensor input, Tensor **output);
-    MLErr (*derive)(struct layer *self, Tensor upstream_derivatives, Tensor activation, Tensor **downstream_derivative, Tensor **self_derivative);
-    MLErr (*update)(struct layer *self, Tensor self_derivative);
+    MLErr (*forward)(struct layer *self, Tensor *input, Tensor **output);
+    MLErr (*derive)(struct layer *self, Tensor *upstream_derivatives, Tensor *activation, Tensor **downstream_derivative, Tensor **self_derivative);
+    MLErr (*update)(struct layer *self, Tensor *self_derivative);
 
     // Cache for the implemntation to use and refrance as needed.
     // Handled by the implementation only, and is considered opaque
@@ -80,17 +82,17 @@ typedef struct layer {
 #define ML_PROTOTYPE_LAYER(name) \
 MLErr ml##name##Initialize(Layer *self); \
 MLErr ml##name##Cleanup(Layer *self); \
-MLErr ml##name##Forward(Layer *self, Tensor input, Tensor **output); \
-MLErr ml##name##Derive(Layer *self, Tensor upstream_derivatives, Tensor activation, Tensor **downstream_derivative, Tensor **self_derivative); \
-MLErr ml##name##Update(Layer *self, Tensor self_derivative); \
+MLErr ml##name##Forward(Layer *self, Tensor *input, Tensor **output); \
+MLErr ml##name##Derive(Layer *self, Tensor *upstream_derivatives, Tensor *activation, Tensor **downstream_derivative, Tensor **self_derivative); \
+MLErr ml##name##Update(Layer *self, Tensor *self_derivative); \
 const char* ml##name##ErrorString(int error);
 
 // Make layer by name.
 #define mlMakeLayer(name, parameters, initial_weights) mlMakeLayerExplicit(ml##name##Forward, ml##name##Derive, ml##name##Update, ml##name##Initialize, ml##name##Cleanup, ml##name##ErrorString, parameters, initial_weights)
 // Make layer by explicit function pointers.
-static Layer* mlMakeLayerExplicit(MLErr (*forward)(struct layer *self, Tensor input, Tensor **output), 
-                 MLErr (*derive)(struct layer *self, Tensor upstream_derivatives, Tensor activation, Tensor **downstream_derivative, Tensor **self_derivative),
-                 MLErr (*update)(struct layer *self, Tensor self_derivative),
+static Layer* mlMakeLayerExplicit(MLErr (*forward)(struct layer *self, Tensor *input, Tensor **output), 
+                 MLErr (*derive)(struct layer *self, Tensor *upstream_derivatives, Tensor *activation, Tensor **downstream_derivative, Tensor **self_derivative),
+                 MLErr (*update)(struct layer *self, Tensor *self_derivative),
                  MLErr (*initialize)(struct layer *self),
                  MLErr (*cleanup)(struct layer *self),
                  const char* (*errorString)(int error),
@@ -175,7 +177,7 @@ typedef struct learninginstance {
     Tensor *target_outputs;
 
     // Optimier is handled by the implementation. 
-    MLErr (*optimizer)(struct learninginstance *self, Tensor *activations, Tensor *derivatives);
+    MLErr (*optimizer)(struct learninginstance *self, Tensor **activations, Tensor **derivatives);
 
     // Cache for the implemntation to use and refrance as needed.
     // Handled by the implementation only, and is considered opaque
@@ -191,7 +193,7 @@ typedef struct learninginstance {
 
 // Prototype optimizer by name.
 #define ML_PROTOTYPE_OPTIMIZER(name) \
-MLErr ml##name(LearningInstance *self, Tensor *activations, Tensor *derivatives); \
+MLErr ml##name(LearningInstance *self, Tensor **activations, Tensor **derivatives); \
 MLErr ml##name##Initialize(LearningInstance *self); \
 MLErr ml##name##Cleanup(LearningInstance *self);
 
@@ -199,7 +201,7 @@ MLErr ml##name##Cleanup(LearningInstance *self);
 #define mlMakeLearningInstance(machine, hyper_parameters, input_n, inputs, target_outputs, optimizer_name) mlMakeLearningInstanceExplicit(machine, hyper_parameters, input_n, inputs, target_outputs, ml##optimizer_name, ml##optimizer_name##Initialize, ml##optimizer_name##Cleanup)
 // Make instnace by explicit function pointers.
 static LearningInstance* mlMakeLearningInstanceExplicit(Machine machine, void *hyper_parameters, int input_n, Tensor *inputs, Tensor *target_outputs, 
-    MLErr (*optimizer)(struct learninginstance *self, Tensor *activations, Tensor *derivatives),
+    MLErr (*optimizer)(struct learninginstance *self, Tensor **activations, Tensor **derivatives),
     MLErr (*initialize)(struct learninginstance *self),
     MLErr (*cleanup)(struct learninginstance *self)) {
     LearningInstance *instance = malloc(sizeof(LearningInstance));

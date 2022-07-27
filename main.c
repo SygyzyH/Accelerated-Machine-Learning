@@ -22,9 +22,11 @@ int main() {
     l1w->data = (double []) { 0.11, 0.21, 0.12, 0.08 };
     l2w->data = (double []) { 0.14, 0.15 };
 
-    Machine m = mlMakeMachine(3, (Layer *[]) {
+    Machine m = mlMakeMachine(5, (Layer *[]) {
                                 mlMakeLayer(FullyConnected, NULL, l1w),
+                                mlMakeLayer(Bias, NULL, mlWeightInitializer(ML_WEIGHT_INITIALIZER_ONES, 1, (unsigned []) { 2 })),
                                 mlMakeLayer(FullyConnected, NULL, l2w),
+                                mlMakeLayer(Bias, NULL, mlWeightInitializer(ML_WEIGHT_INITIALIZER_ONES, 1, (unsigned []) { 1 })),
                                 mlMakeLayer(MeanSquaredError, NULL, NULL)
                             });
 

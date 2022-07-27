@@ -156,21 +156,21 @@ MatrixErr matTensorFit(Tensor *t1, Tensor *t2, Tensor **t1r, Tensor **t2r) {
     unsigned *t2_dims = (unsigned *) malloc(sizeof(unsigned) * biggest->ndims);
     
     for (int i = 0; i < biggest->ndims; i++) {
-        if (i < t1->ndims) {
+        if (i < t1->ndims)
             if (t1->dimsz[i] != 1)
                 t1_dims[i] = t1->dimsz[i];
             else
                 t1_dims[i] = t2->dimsz[i];
-        } else t1_dims[i] = t1->dimsz[i];
+        else t1_dims[i] = t2->dimsz[i];
     }
 
     for (int i = 0; i < biggest->ndims; i++) {
-        if (i < t2->ndims) {
+        if (i < t2->ndims)
             if (t2->dimsz[i] != 1)
                 t2_dims[i] = t2->dimsz[i];
             else 
                 t2_dims[i] = t1->dimsz[i];
-        } else t2_dims[i] = t1->dimsz[i];
+        else t2_dims[i] = t1->dimsz[i];
     }
 
     for (int i = 0; i < biggest->ndims; i++) {
@@ -296,7 +296,7 @@ MatrixErr matSum(double *src, int size, double *res) {
 }
 
 MatrixErr matProd(Tensor *t1, Tensor *t2, Tensor **r) {
-    // TODO: Testing: tensor * tensor, tensor * matrix, matrix * matrix, matrix * vector, vector * vector, tensor * vector (requires the fix).
+    // TODO: Testing: tensor * tensor, tensor * matrix, matrix * matrix, matrix * vector, vector * vector, tensor * vector
     if (r == NULL) return MAT_NULL_PTR;
     *r = NULL;
     {
@@ -306,10 +306,7 @@ MatrixErr matProd(Tensor *t1, Tensor *t2, Tensor **r) {
     }
 
     if (t1->ndims == 0 || t2->ndims == 0) return MAT_DIMENSION_MISTMATCH;
-    if (t1->ndims != 1 && t2->ndims != 1 && t1->ndims != t2->ndims)
-        return MAT_DIMENSION_MISTMATCH;
-    if (t1->dimsz[0] != ((t2->ndims > 1)? t2->dimsz[1] : t2->dimsz[0]))
-        return MAT_UNFIT_TENSORS;
+    if (t1->ndims != 1 && t2->ndims != 1 && t1->ndims != t2->ndims) return MAT_DIMENSION_MISTMATCH;
     
     int t1_vector = 0;
     unsigned *odimsz1 = t1->dimsz;
@@ -335,6 +332,8 @@ MatrixErr matProd(Tensor *t1, Tensor *t2, Tensor **r) {
         
         t2_vector = 1;
     }
+    
+    if (t1->dimsz[0] != ((t2->ndims > 1)? t2->dimsz[1] : t2->dimsz[0])) return MAT_UNFIT_TENSORS;
 
     Tensor *biggest = (t1->ndims > t2->ndims)? t1 : t2;
     int rndims = biggest->ndims;
@@ -393,7 +392,7 @@ MatrixErr matProd(Tensor *t1, Tensor *t2, Tensor **r) {
         matFreeTensor(r);
         *r = matMakeScalar(sum, NULL);
     }
-
+    
     return MAT_NO_ERROR;
 }
 
@@ -436,7 +435,10 @@ MatrixErr matDot(Tensor *t1, Tensor *t2, Tensor **r) {
                  t2->ndims, t2->dimsz, t2->ndims, OCLREAD | OCLCPY,
                  res->data, res->literal_size, OCLWRITE | OCLOUT,
                  res->ndims, res->dimsz, res->ndims, OCLREAD | OCLCPY);
-    if (claGetError(1)) return MAT_KERNEL_FAILURE;
+    if (claGetError(1)) {
+        matFreeTensor(r);
+        return MAT_KERNEL_FAILURE;
+    } 
 
     return MAT_NO_ERROR;
 }
@@ -477,15 +479,15 @@ MatrixErr _matSTDLinearCall(Tensor *t1, Tensor *t2, Tensor **r, const char *knam
     return MAT_NO_ERROR;
 }
 
-MatrixErr matAdd(Tensor *t1, Tensor *t2, Tensor **r) {
+inline MatrixErr matAdd(Tensor *t1, Tensor *t2, Tensor **r) {
     return _matSTDLinearCall(t1, t2, r, "matadd");
 }
 
-MatrixErr matSub(Tensor *t1, Tensor *t2, Tensor **r) {
+inline MatrixErr matSub(Tensor *t1, Tensor *t2, Tensor **r) {
     return _matSTDLinearCall(t1, t2, r, "matsub");
 }
 
-MatrixErr matMult(Tensor *t1, Tensor *t2, Tensor **r) {
+inline MatrixErr matMult(Tensor *t1, Tensor *t2, Tensor **r) {
     return _matSTDLinearCall(t1, t2, r, "matmul");
 }
 
