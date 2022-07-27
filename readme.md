@@ -40,11 +40,10 @@ Used as the mathematical engine in the machine learning model.
 ### ml.h
 Library code itself.
 Intended to be the interface between the back-end mat.h and oclapi and the end user.
-This library implements the layer codes, using a specified protocol, allowing for easy chaining of layers.
-Provides error checking, and contains the error in its internal structure.
-Allows interaction with the model, via training and simple forward feeding.
-
-Provides some utilities, such as weight initializers.
+- Implements the layer codes, using a specified protocol, allowing for easy chaining of layers
+- Provides error checking, and contains the error in its internal structure
+- Allows interaction with the model, via training and simple forward feeding
+- Provides some utilities, such as weight initializers.
 
 ## TODO
 - [ ] mat.h can have a "calibration" phase in its init, checking when certain Tensors are faster to calculate on the CPU.
