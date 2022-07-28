@@ -82,7 +82,7 @@ __kernel void matdot(__global double *a, __global double *b, unsigned andims, __
     int gi = get_global_id(0);
 
     unsigned a_stride = 1;
-    unsigned b_stride = bdimsz[0];
+    unsigned b_stride = (bndims > 1)? bdimsz[0] : 1;
 
     // is first andims - 1 indecies of rndims
     unsigned a_ind = remapLinearIndexSpace(gi, rdimsz, &adimsz[1], andims - 1) * adimsz[0];

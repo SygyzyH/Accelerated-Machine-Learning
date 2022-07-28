@@ -296,7 +296,6 @@ MatrixErr matSum(double *src, int size, double *res) {
 }
 
 MatrixErr matProd(Tensor *t1, Tensor *t2, Tensor **r) {
-    // TODO: Testing: tensor * tensor, tensor * matrix, matrix * matrix, matrix * vector, vector * vector, tensor * vector
     if (r == NULL) return MAT_NULL_PTR;
     *r = NULL;
     {
@@ -386,20 +385,12 @@ MatrixErr matProd(Tensor *t1, Tensor *t2, Tensor **r) {
         *r = matMakeScalar(res_s, NULL);
     }
 
-    if (t1_vector && t2_vector) {
-        double sum;
-        matSum((*r)->data, (*r)->literal_size, &sum);
-        matFreeTensor(r);
-        *r = matMakeScalar(sum, NULL);
-    }
-    
+    matTensorReduce(*r);
+
     return MAT_NO_ERROR;
 }
 
 MatrixErr matDot(Tensor *t1, Tensor *t2, Tensor **r) {
-    // NOTE: If this is written correctly, no need for the if statments - all cases can be handled the same way.
-    // NOTE: Can't this reuse matprod kernel?
-    // I think not.
     if (r == NULL) return MAT_NULL_PTR;
     *r = NULL;
     {
@@ -411,7 +402,10 @@ MatrixErr matDot(Tensor *t1, Tensor *t2, Tensor **r) {
     if (matIsTensorScalar(t1) || matIsTensorScalar(t2)) return matMult(t1, t2, r);
     if (t1->ndims <= 2 && t2->ndims <= 2) return matProd(t1, t2, r);
     
-    // Tensors are both ND, N > 2.
+    // a Tensors is nD, n > 2.
+    // Check if first dimension of t1 equals the second dimension of t2.
+    if (t1->dimsz[0] != t2->dimsz[MIN(1, t2->ndims - 1)]) return MAT_DIMENSION_MISTMATCH;
+
     unsigned ndims = MAX(0, t1->ndims + t2->ndims - 2);
     unsigned *dimsz = (unsigned *) malloc(sizeof(unsigned) * (ndims? ndims : 1));
     // For scalar result. If nonscalar - this would be overwritten.
@@ -419,7 +413,7 @@ MatrixErr matDot(Tensor *t1, Tensor *t2, Tensor **r) {
     for (int i = 0; i < ndims; i++) {
         if (i + 1 < t1->ndims) dimsz[i] = t1->dimsz[i + 1];
         else if (i + 1 == t1->ndims) dimsz[i] = t2->dimsz[0];
-        else dimsz[i] = t2->dimsz[i - t1->ndims + 2];
+        else dimsz[i] = t2->dimsz[MAX(i - t1->ndims + 2, t2->ndims - 1)];
     }
 
     *r = matMakeTensor(ndims, dimsz, NULL);
@@ -438,7 +432,9 @@ MatrixErr matDot(Tensor *t1, Tensor *t2, Tensor **r) {
     if (claGetError(1)) {
         matFreeTensor(r);
         return MAT_KERNEL_FAILURE;
-    } 
+    }
+
+    matTensorReduce(*r);
 
     return MAT_NO_ERROR;
 }
@@ -474,7 +470,10 @@ MatrixErr _matSTDLinearCall(Tensor *t1, Tensor *t2, Tensor **r, const char *knam
                  new_t1->data, new_t1->literal_size, OCLREAD | OCLCPY,
                  new_t2->data, new_t2->literal_size, OCLREAD | OCLCPY,
                  res->data, res->literal_size, OCLWRITE | OCLOUT);
-    if (claGetError(1)) return MAT_KERNEL_FAILURE;
+    if (claGetError(1)) { 
+        matFreeTensor(r);
+        return MAT_KERNEL_FAILURE;
+    }
 
     return MAT_NO_ERROR;
 }

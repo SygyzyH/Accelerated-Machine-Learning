@@ -47,5 +47,5 @@ Intended to be the interface between the back-end mat.h and oclapi and the end u
 
 ## TODO
 - [ ] mat.h can have a "calibration" phase in its init, checking when certain Tensors are faster to calculate on the CPU.
-- [ ] mat.h is currently HIGHLY unsafe, and not throughly tested.
+- [X] mat.h is currently HIGHLY unsafe, and not throughly tested.
 - [ ] Compile this into a library.
