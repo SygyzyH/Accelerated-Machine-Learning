@@ -153,6 +153,8 @@ typedef struct learninginstance {
 
     // Optimier is handled by the implementation. 
     MLErr (*optimizer)(struct learninginstance *self, Tensor **activations, Tensor **derivatives);
+    // Propagation handled by the implemntation.
+    MLErr (*propagate)(struct learninginstance *self, Tensor *upstream_derivative, Tensor **downstream_derivative);
 
     // Cache for the implemntation to use and refrance as needed.
     // Handled by the implementation only, and is considered opaque
@@ -206,12 +208,11 @@ An optimizer is given an `initialize` function to prepare its `_cache`, and vali
 The same rules for a `Layer` initializer apply.
 And an optimizer is given a `cleanup` function, and is responsible for freeing any resources it uses.
 
-An `Optimizer` must implement one function:
+An `Optimizer` must implement two function:
 - `optimizer` which will recive the `LearningInstance`, all the `activations` per `Layer` and all the `derivatives` per `Layer`,  
 and will update each `Layer` in the `LearningInstance`s `Machine`.
-
-> TODO: `Optimizer` should also implement a function that is called on each step of the backpropegation, to change the  
-rolling derivative.
+- `propagate` will occour in every step of **back** propagation. This function is responsible for updateing the rolling weights,  
+`upstream_derivative` and transforming it to `downstream_derivative`.
 
 ## Error
 All `ml.h` functions that can produce errors (enumerated in `MLErr`) will either return them, or allow for a pointer to be passed
