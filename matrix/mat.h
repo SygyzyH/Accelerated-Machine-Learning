@@ -1,9 +1,11 @@
 #ifndef MAT_H
 #define MAT_H
 
-#include "../acceleration/oclapi.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
+#include <oclapi.h>
 
 #define MAT_PRINT_ERR
 // TODO: Is this a good idea?

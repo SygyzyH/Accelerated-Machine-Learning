@@ -2,10 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "matrix/mat.h"
-#include "acceleration/oclapi.h"
-#include "ml/ml.h"
-#include <acceleration/kernels/static_kernels_src.h>
+#include <ml.h>
 
 #include <assert.h>
 int main() {

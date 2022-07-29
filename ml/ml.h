@@ -3,7 +3,7 @@
 #ifndef ML_H
 #define ML_H
 
-#include "../matrix/mat.h"
+#include <mat.h>
 #include <stdlib.h>
 
 typedef enum {
@@ -116,10 +116,24 @@ static Layer* mlMakeLayerExplicit(MLErr (*forward)(struct layer *self, Tensor *i
     return l;
 }
 
-static inline void freeLayer(Layer *l) {
+static inline void mlFreeLayer(Layer **l) {
     if (l == NULL) return;
-    l->cleanup(l);
+
+    Layer *l_p = *l;
+    
+    if (l_p != NULL) l_p->cleanup(l_p);
+
+    free(*l);
+    *l = NULL;
 }
+
+typedef enum {
+    ML_WEIGHT_INITIALIZER_ZEROS,
+    ML_WEIGHT_INITIALIZER_ONES,
+    ML_WEIGHT_INITIALIZER_GLOROT
+} MLWeightInitializerType;
+
+Tensor* mlWeightInitializer(MLWeightInitializerType initializer, unsigned ndims, unsigned *dims);
 
 /* Machine */
 
@@ -137,22 +151,34 @@ static Machine mlMakeMachine(int layer_count, Layer **layers) {
     m.layers = layers;
 
     m._all_layers_initialized = 1;
-    for (int i = 0; i < m.layer_count; i++) 
-        if (m.layers[i]->_initialization_error != ML_NO_ERR)
+    for (int i = 0; i < m.layer_count; i++) {
+        if (m.layers[i] == NULL)
             m._all_layers_initialized = 0;
+        else if (m.layers[i]->_initialization_error != ML_NO_ERR)
+            m._all_layers_initialized = 0;
+    }
 
     return m;
 }
 
+static void mlFreeMachine(Machine **m) {
+    if (m == NULL) return;
+
+    Machine *m_p = *m;
+    if (m_p != NULL)
+        for (int i = 0; i < m_p->layer_count; i++)
+            mlFreeLayer(&m_p->layers[i]);
+
+    free(*m);
+    *m = NULL;
+}
+
+static inline void mlFreeMachineD(Machine m) {
+    for (int i = 0; i < m.layer_count; i++)
+        mlFreeLayer(&m.layers[i]);
+}
+
 MLErr mlMachineFeedForward(Machine machine, Tensor *input, Tensor **output);
-
-typedef enum {
-    ML_WEIGHT_INITIALIZER_ZEROS,
-    ML_WEIGHT_INITIALIZER_ONES,
-    ML_WEIGHT_INITIALIZER_GLOROT
-} MLWeightInitializerType;
-
-Tensor* mlWeightInitializer(MLWeightInitializerType initializer, unsigned ndims, unsigned *dims);
 
 /* LearningInstance*/
 

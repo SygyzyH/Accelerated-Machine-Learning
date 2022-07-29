@@ -1,6 +1,8 @@
 #include "mat.h"
 #include "../acceleration/oclapi.h"
+
 #include <acceleration/kernels/static_kernels_src.h>
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>

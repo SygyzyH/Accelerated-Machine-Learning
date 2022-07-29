@@ -6,9 +6,6 @@ set(CMAKE_MODIFIED_HEADER acceleration/kernels/static_kernels_src.h)
 set(KERNEL_SOURCE_DIRECTORY "acceleration/kernels/src")
 set(KERNEL_SOURCE_FILE_TYPE "cl")
 
-# TODO: Only do this if in debug mode
-set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
-
 project(aml)
 
 # For linux, if the OpenCL implementation is not found, using
@@ -17,7 +14,12 @@ project(aml)
 # https://github.com/fireice-uk/xmr-stak-amd/issues/97
 find_package(OpenCL REQUIRED)
 
-add_executable(aml main.c acceleration/oclapi.c matrix/mat.c ml/layers.c ml/machine.c ml/optimizer.c)
+set(SOURCE_FILES acceleration/oclapi.c matrix/mat.c ml/layers.c ml/machine.c ml/optimizer.c)
+
+add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
+add_library("${PROJECT_NAME}_static" STATIC ${SOURCE_FILES})
+
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "ml/ml.h;matrix/mat.h;acceleration/oclapi.h")
 
 # Put kernel sources into program build, staticly.
 # Strings at the CMAKE_MODIFIED_HEADER_OUTPUT header constructed
@@ -45,6 +47,21 @@ foreach(FILE_NAME ${KERNEL_SOURCES})
 endforeach()
 
 configure_file(${CMAKE_MODIFIED_HEADER} ${CMAKE_MODIFIED_HEADER} @ONLY)
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${CMAKE_BINARY_DIR})
 
-target_link_libraries(aml OpenCL::OpenCL m)
+# Link with OpenCL
+target_link_libraries(${PROJECT_NAME} OpenCL::OpenCL m)
+
+# install
+include(GNUInstallDirs)
+
+install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(TARGETS "${PROJECT_NAME}_static" LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+# Testing executable
+add_executable("${PROJECT_NAME}-bin" main.c)
+target_link_libraries("${PROJECT_NAME}-bin" ${PROJECT_NAME})
+target_include_directories("${PROJECT_NAME}-bin" PUBLIC ${PROJECT_NAME})
+
+# Rename it to project name
+set_target_properties("${PROJECT_NAME}-bin" PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
