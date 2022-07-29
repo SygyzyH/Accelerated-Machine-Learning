@@ -204,6 +204,8 @@ typedef struct learninginstance {
 
     // Optimier is handled by the implementation. 
     MLErr (*optimizer)(struct learninginstance *self, Tensor **activations, Tensor **derivatives);
+    // Propagation handled by the implemntation.
+    MLErr (*propagate)(struct learninginstance *self, Tensor *upstream_derivative, Tensor **downstream_derivative);
 
     // Cache for the implemntation to use and refrance as needed.
     // Handled by the implementation only, and is considered opaque
@@ -220,19 +222,22 @@ typedef struct learninginstance {
 // Prototype optimizer by name.
 #define ML_PROTOTYPE_OPTIMIZER(name) \
 MLErr ml##name(LearningInstance *self, Tensor **activations, Tensor **derivatives); \
+MLErr ml##name##Propagate(LearningInstance *self, Tensor *upstream_derivative, Tensor **downstream_derivative); \
 MLErr ml##name##Initialize(LearningInstance *self); \
 MLErr ml##name##Cleanup(LearningInstance *self);
 
 // Make instance by name
-#define mlMakeLearningInstance(machine, hyper_parameters, input_n, inputs, target_outputs, optimizer_name) mlMakeLearningInstanceExplicit(machine, hyper_parameters, input_n, inputs, target_outputs, ml##optimizer_name, ml##optimizer_name##Initialize, ml##optimizer_name##Cleanup)
+#define mlMakeLearningInstance(machine, hyper_parameters, input_n, inputs, target_outputs, optimizer_name) mlMakeLearningInstanceExplicit(machine, hyper_parameters, input_n, inputs, target_outputs, ml##optimizer_name, ml##optimizer_name##Propagate, ml##optimizer_name##Initialize, ml##optimizer_name##Cleanup)
 // Make instnace by explicit function pointers.
 static LearningInstance* mlMakeLearningInstanceExplicit(Machine machine, void *hyper_parameters, int input_n, Tensor *inputs, Tensor *target_outputs, 
     MLErr (*optimizer)(struct learninginstance *self, Tensor **activations, Tensor **derivatives),
+    MLErr (*propagate)(struct learninginstance *self, Tensor *upstream_derivative, Tensor **downstream_derivative),
     MLErr (*initialize)(struct learninginstance *self),
     MLErr (*cleanup)(struct learninginstance *self)) {
-    LearningInstance *instance = malloc(sizeof(LearningInstance));
+    LearningInstance *instance = (LearningInstance *) malloc(sizeof(LearningInstance));
 
     instance->optimizer = optimizer;
+    instance->propagate = propagate;
 
     instance->_cache = NULL;
     instance->initialize = initialize;

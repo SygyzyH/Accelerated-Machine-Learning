@@ -67,6 +67,6 @@ For the accelerated functionality, import `oclapi.h`.
 - [X] mat.h docs.
 - [X] ml.h docs.
 - [ ] oclapi docs.
-- [ ] Allow `Optimizer`s to manage flowing derivatives during the learning process.
+- [X] Allow `Optimizer`s to manage flowing derivatives during the learning process.
 - [ ] mat.h can have a "calibration" phase in its init, checking when certain Tensors are faster to calculate on the CPU.
 - [ ] add numpy-like `view`, or, like in previus commits, have the `Tensor` class not have guarenteed contigues data.

@@ -1,4 +1,5 @@
 #include "ml.h"
+#include <mat.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -94,9 +95,10 @@ MLErr mlTrainInstance(LearningInstance *instance) {
         Tensor *self_deriv = NULL;
 
         for (int layeri = src_machine.layer_count - 1; layeri >= 0; layeri--) {
-            MLErr error = src_machine.layers[layeri]->derive(src_machine.layers[layeri], curr_deriv, activations[inp_num][layeri], &next_deriv, &self_deriv);
+            MLErr derror = src_machine.layers[layeri]->derive(src_machine.layers[layeri], curr_deriv, activations[inp_num][layeri], &next_deriv, &self_deriv);
             if (curr_deriv != err_deriv) matFreeTensor(&curr_deriv);
-            if (error != ML_NO_ERR) {
+            
+            if (derror != ML_NO_ERR) {
 
                 freeActivationsDerivatives;
                 
@@ -104,11 +106,24 @@ MLErr mlTrainInstance(LearningInstance *instance) {
                 matFreeTensor(&next_deriv);
                 matFreeTensor(&self_deriv);
 
-                return error;
+                return derror;
             }
 
             derivatives[inp_num][layeri] = self_deriv;
-            curr_deriv = next_deriv;
+            
+            MLErr oerror = instance->propagate(instance, next_deriv, &curr_deriv);
+            matFreeTensor(&next_deriv);
+            
+            if (oerror != ML_NO_ERR) {
+
+                freeActivationsDerivatives;
+                
+                matFreeTensor(&curr_deriv);
+                matFreeTensor(&next_deriv);
+                matFreeTensor(&self_deriv);
+
+                return oerror;
+            }
         } 
         // The final derivative is not needed, its the derivative
         // of the previous layer, but this is the last layer.
@@ -140,6 +155,12 @@ MLErr mlSGD(LearningInstance *self, Tensor **activations, Tensor **derivatives) 
     }
 
     return error;
+}
+
+MLErr mlSGDPropagate(LearningInstance *self, Tensor *upstream_derivative, Tensor **downstream_derivative) {
+    *downstream_derivative = matTensorDeepCopy(upstream_derivative, NULL);
+
+    return ML_NO_ERR;
 }
 
 MLErr mlSGDInitialize(LearningInstance *self) {
